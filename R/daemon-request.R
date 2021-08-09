@@ -30,11 +30,12 @@ request.getTask <- function(){
     )
 }
 
-request.export <- function(expr){
+request.export <- function(x){
+    stopifnot(all(nzchar(x)))
     list(
         pid = Sys.getpid(),
         type = "export",
-        data = expr
+        data = x
     )
 }
 

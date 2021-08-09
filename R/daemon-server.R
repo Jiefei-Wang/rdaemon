@@ -1,6 +1,6 @@
 serverData <- new.env(parent = emptyenv())
 serverData$serverConn <- NULL
-serverData$port <- findPort()
+serverData$port <- NULL
 ## element's name is pid
 serverData$connections <- list()
 serverData$tasks <- list()
@@ -8,15 +8,16 @@ serverData$taskData <- list()
 
 
 runDaemon <- function(name){
+    serverData$port <- findPort()
     
     ## Run and check if this daemon gets the permission to continue
-    setGlobalVariable(deamonPort(name), serverData$port)
+    setDaemonPort(name, serverData$port)
     serverData$serverConn <- serverSocket(serverData$port)
     Sys.sleep(1)
-    if(getGlobalVariable(deamonPort(name)) != serverData$port){
+    if(getDaemonPort(name) != serverData$port){
         return()
     }
-    setGlobalVariable(deamonPid(name), Sys.getpid())
+    setDaemonPid(name, Sys.getpid())
     
     repeat{
         tryCatch(
@@ -27,8 +28,10 @@ runDaemon <- function(name){
                 ## run the existing task
                 runTasks()
                 
-                ## add new task
+                ## process incoming request
                 processRequest()
+                
+                message("Waiting for the next command")
             }
         )
     }

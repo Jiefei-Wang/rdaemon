@@ -11,8 +11,8 @@ clientData$pids <- list()
 
 
 validateDaemonRegistration <- function(name){
-    port <- deamonPort(name)
-    pid <- deamonPid(name)
+    port <- getDaemonPort(name)
+    pid <- getDaemonPid(name)
     if(!is.null(clientData$ports[[name]])){
         if(clientData$ports[[name]] != port||
            clientData$pids[[name]] != pid||
@@ -26,8 +26,8 @@ validateDaemonRegistration <- function(name){
 ## It is safe to call this function many times
 ## with the same name
 loadDaemon <- function(name){
-    port <- deamonPort(name)
-    pid <- deamonPid(name)
+    port <- getDaemonPort(name)
+    pid <- getDaemonPid(name)
     
     ## Remove the incorrect daemon record
     if(validateDaemonRegistration(name)){
@@ -63,7 +63,7 @@ deregisterDaemon <- function(name){
 }
 
 killDaemon <- function(name){
-    pid <- deamonPid(name)
+    pid <- getDaemonPid(name)
     if(is.na(pid))
         return()
     
@@ -73,7 +73,7 @@ killDaemon <- function(name){
 }
 
 existsDaemon <- function(name){
-    pid <- deamonPid(name)
+    pid <- getDaemonPid(name)
     if(is.na(pid)){
         FALSE
     }else{
@@ -81,22 +81,30 @@ existsDaemon <- function(name){
     }
 }
 
-daemonTask <- function(name, expr){
+daemonSetTask <- function(name, expr){
+    con <- clientData$connections[[name]]
+    stopifnot(!is.null(con))
     
+    task <- request.setTask(substitute(expr))
+    writeData(con, task)
 }
 
-daemonTaskScript <- function(name, path){
+daemonSetTaskScript <- function(name, path){
+    con <- clientData$connections[[name]]
+    stopifnot(!is.null(con))
+    
     
 }
 
 daemonExport <- function(name, ...){
+    con <- clientData$connections[[name]]
+    stopifnot(!is.null(con))
     
+    x <- request.export(list(...))
+    writeData(con, x)
 }
 
-deamonPort <- function(name){
-    getGlobalVariable(daemonPortName(name))
-}
 
-deamonPid <- function(name){
-    getGlobalVariable(daemonPidName(name))
-}
+
+
+
