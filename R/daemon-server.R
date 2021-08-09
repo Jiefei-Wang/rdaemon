@@ -8,16 +8,18 @@ serverData$taskData <- list()
 
 
 runDaemon <- function(name){
-    serverData$port <- findPort()
-    
-    ## Run and check if this daemon gets the permission to continue
-    setDaemonPort(name, serverData$port)
-    serverData$serverConn <- serverSocket(serverData$port)
-    Sys.sleep(1)
-    if(getDaemonPort(name) != serverData$port){
-        return()
+    if(is.null(serverData$serverConn)){
+        serverData$port <- findPort()
+        
+        ## Run and check if this daemon gets the permission to continue
+        setDaemonPort(name, serverData$port)
+        serverData$serverConn <- serverSocket(serverData$port)
+        Sys.sleep(1)
+        if(getDaemonPort(name) != serverData$port){
+            return()
+        }
+        setDaemonPid(name, Sys.getpid())
     }
-    setDaemonPid(name, Sys.getpid())
     
     repeat{
         tryCatch(
@@ -31,7 +33,7 @@ runDaemon <- function(name){
                 ## process incoming request
                 processRequest()
                 
-                message("Waiting for the next command")
+                message("Client Number:", length(serverData$connections))
             }
         )
     }
@@ -56,8 +58,8 @@ acceptConnections <- function(){
             if(is.null(pid)){
                 stop("Handshake failed, cannot establish the new connection!")
             }
-            serverData$connections[[pid]] <- c(serverData$connections, con)
-            serverData$taskData[[pid]] <- new.env(parent = .GlobalEnv)
+            serverData$connections[[as.character(pid)]] <- con
+            serverData$taskData[[as.character(pid)]] <- new.env(parent = .GlobalEnv)
             TRUE
         },
         error = function(e) FALSE)
@@ -84,7 +86,7 @@ runTasks <- function(){
 processRequest <- function(){
     pids <- names(serverData$connections)
     for(pid in pids){
-        con <- serverData$connections[[pid]]
+        con <- serverData$connections[[as.character(pid)]]
         requests <- readData(con)
         for(request in requests){
             tryCatch(
@@ -98,29 +100,29 @@ processRequest <- function(){
 }
 
 processIndividualRequest <- function(pid, request){
-    if(is.null(serverData$connections[[pid]]))
+    if(is.null(serverData$connections[[as.character(pid)]]))
         return()
     
     data <- request$data
     if(isSetTaskRequest(request)){
-        serverData$tasks[[pid]] <- data
+        serverData$tasks[[as.character(pid)]] <- data
         return()
     }
     if(isGetTaskRequest(request)){
-        writeData(con, serverData$tasks[[pid]])
+        writeData(con, serverData$tasks[[as.character(pid)]])
         return()
     }
     if(isExportRequest(request)){
         for(i in names(data)){
-            serverData$taskData[[pid]][[i]] <- data[[i]]
+            serverData$taskData[[as.character(pid)]][[i]] <- data[[i]]
         }
         return()
     }
     if(isRemoveClientRequest(request)){
-        close(serverData$connections[[pid]])
-        serverData$connections[[pid]] <- NULL
-        serverData$taskData[[pid]] <- NULL
-        serverData$tasks[[pid]] <- NULL
+        close(serverData$connections[[as.character(pid)]])
+        serverData$connections[[as.character(pid)]] <- NULL
+        serverData$taskData[[as.character(pid)]] <- NULL
+        serverData$tasks[[as.character(pid)]] <- NULL
         return(TRUE)
     }
 }
