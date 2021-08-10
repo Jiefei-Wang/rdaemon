@@ -21,15 +21,6 @@ isProcessAlive <- function(pid){
     )
 }
 
-log <- function(...){
-    if(!is.null(deamonLogFile)){
-        msg <- paste0(...)
-        current <- Sys.time()
-        msg <- paste0(current, "  ", msg, "\n")
-        cat(msg, file = deamonLogFile, append = TRUE)
-    }
-}
-
 readTxt <- function(file){
     readChar(file, file.info(file)$size)
 }
