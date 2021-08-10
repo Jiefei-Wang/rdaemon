@@ -5,7 +5,7 @@ serverData$port <- NULL
 serverData$connections <- list()
 serverData$tasks <- list()
 serverData$taskData <- list()
-
+serverData$timeout <- 60
 
 runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL){
     if(!is.null(logFile)&&nzchar(logFile)){
@@ -20,20 +20,19 @@ runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL
         })
     }
     
-    if(is.null(serverData$serverConn)){
-        serverData$port <- findPort()
-        
-        ## Run and check if this daemon gets the permission to continue
-        serverData$serverConn <- serverSocket(serverData$port)
-        setDaemonPort(name, serverData$port)
-        Sys.sleep(1)
-        if(getDaemonPort(name) != serverData$port){
-            close(serverData$serverConn)
-            serverData$serverConn <- NULL
-            return()
-        }
-        setDaemonPid(name, Sys.getpid())
+    serverData$port <- findPort()
+    ## Run and check if this daemon gets the permission to continue
+    serverData$serverConn <- serverSocket(serverData$port)
+    setDaemonPort(name, serverData$port)
+    Sys.sleep(1)
+    if(getDaemonPort(name) != serverData$port){
+        close(serverData$serverConn)
+        serverData$serverConn <- NULL
+        return()
     }
+    setDaemonPid(name, Sys.getpid())
+    on.exit(quitDaemon(), add = TRUE)
+    
     if(detach){
         detachConsole()
     }
@@ -50,6 +49,12 @@ runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL
                 ## process incoming request
                 processRequest()
                 
+                ## Check if the daemon is timeout
+                timeout <- checkTimeout()
+                if(timeout){
+                    message("No task is running, quit daemon")
+                    break
+                }
                 message("Client Number:", length(serverData$connections))
             },
             error = function(e) 
@@ -61,6 +66,12 @@ runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL
     }
 }
 
+quitDaemon <- function(){
+    close(serverData$serverConn)
+    serverData$serverConn <- NULL
+    setDaemonPort(name, NA_integer_)
+    setDaemonPid(name, NA_integer_)
+}
 
 acceptConnections <- function(){
     success <- TRUE
@@ -159,4 +170,20 @@ processIndividualRequest <- function(requestPid, request){
     }
     
     stop("Unknown task type: ", request$type)
+}
+
+
+checkTimeout <- function(){
+    if(length(serverData$tasks)==0){
+        if(is.null(serverData$startTime)){
+            serverData$startTime <- Sys.time()
+        }
+        timeDiff <- difftime(Sys.time(), serverData$startTime, units = "secs")
+        if(timeDiff > serverData$timeout){
+            return(TRUE)
+        }
+    }else{
+        serverData$startTime <- NULL
+    }
+    FALSE
 }
