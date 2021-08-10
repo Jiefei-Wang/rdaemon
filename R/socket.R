@@ -10,19 +10,19 @@ findPort <- function() {
         break
     }
     # see if it's valid
-    if (portValid(port)) {
+    if (!portOccupied(port)) {
       return(port)
     }
   }
   NULL
 }
 
-portValid <- function(port) {
+portOccupied <- function(port) {
   tryCatch({
     suppressWarnings(con <- serverSocket(port))
     close(con)
-    TRUE
-  }, error = function(e) FALSE)
+    FALSE
+  }, error = function(e) TRUE)
 }
 
 
@@ -39,4 +39,19 @@ readData <- function(con, n = -1){
     }else{
         NULL
     }
+}
+
+waitData <- function(con, timeout = 10){
+    startTime <- Sys.time()
+    data <- NULL
+    while(difftime(Sys.time(), startTime) < timeout){
+        data <- readData(con, n = 1)[[1]]
+        if(!is.null(data))
+            break
+    }
+    data
+}
+
+flushData <- function(con){
+    readLines(con)
 }

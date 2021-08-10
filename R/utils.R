@@ -31,16 +31,16 @@ log <- function(...){
 }
 
 readTxt <- function(file){
-  readChar(file, file.info(file)$size)
+    readChar(file, file.info(file)$size)
 }
 
 
 daemonPortName <- function(name){
-  paste0(name, "_port")
+    paste0(name, "_port")
 }
 
 daemonPidName <- function(name){
-  paste0(name, "_pid")
+    paste0(name, "_pid")
 }
 
 getDaemonPort <- function(name){

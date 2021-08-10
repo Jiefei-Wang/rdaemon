@@ -16,6 +16,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// detachConsole
+void detachConsole();
+RcppExport SEXP _rdaemon_detachConsole() {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    detachConsole();
+    return R_NilValue;
+END_RCPP
+}
 // existsGlobalVariable
 bool existsGlobalVariable(SEXP sharedMemoryName);
 RcppExport SEXP _rdaemon_existsGlobalVariable(SEXP sharedMemoryNameSEXP) {
@@ -84,6 +93,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rdaemon_send_SIGINT", (DL_FUNC) &_rdaemon_send_SIGINT, 1},
+    {"_rdaemon_detachConsole", (DL_FUNC) &_rdaemon_detachConsole, 0},
     {"_rdaemon_existsGlobalVariable", (DL_FUNC) &_rdaemon_existsGlobalVariable, 1},
     {"_rdaemon_createGlobalVariable", (DL_FUNC) &_rdaemon_createGlobalVariable, 2},
     {"_rdaemon_setGlobalVariable", (DL_FUNC) &_rdaemon_setGlobalVariable, 2},

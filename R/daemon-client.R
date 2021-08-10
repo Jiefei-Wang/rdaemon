@@ -10,7 +10,7 @@ clientData$ports <- list()
 clientData$pids <- list()
 
 
-validateDaemonRegistration <- function(name){
+daemonRegistrationValid <- function(name){
     port <- getDaemonPort(name)
     pid <- getDaemonPid(name)
     if(!is.null(clientData$ports[[name]])){
@@ -25,36 +25,43 @@ validateDaemonRegistration <- function(name){
 
 ## It is safe to call this function many times
 ## with the same name
-loadDaemon <- function(name){
-    port <- getDaemonPort(name)
-    pid <- getDaemonPid(name)
+loadDaemon <- function(name, pid = Sys.getpid()){
+    daemonPort <- getDaemonPort(name)
+    daemonPid <- getDaemonPid(name)
     
     ## Remove the incorrect daemon record
-    if(validateDaemonRegistration(name)){
-        deregisterDaemon(name)
+    if(!daemonRegistrationValid(name)){
+        deregisterDaemon(name, pid = pid)
     }
     
     if(existsDaemon(name)&&
        is.null(clientData$connections[[name]])
     ){
-        con <- socketConnection(port = port, open = "r+")
-        writeData(con, Sys.getpid())
+        con <- socketConnection(port = daemonPort, open = "r+")
+        writeData(con, pid)
         clientData$connections[[name]] <- con
-        clientData$ports[[name]] <- port
-        clientData$pids[[name]] <- pid
+        clientData$ports[[name]] <- daemonPort
+        clientData$pids[[name]] <- daemonPid
     }
 }
 
-registerDaemon <- function(name){
+registerDaemon <- function(name, pid = pid, logPath = NULL){
     ## TODO: run daemon in the background
     if(!existsDaemon(name)){
-        
+        rscript <- R.home("bin/Rscript")
+        script <- system.file(package="rdaemon", "script", "startDaemon.R")
+        Sys.setenv(rdaemon_name = name)
+        if(!is.null(logPath))
+            Sys.setenv(rdaemon_logPath = logPath)
+        system2(rscript, shQuote(script), stdout = FALSE, wait = FALSE)
     }
     loadDaemon(name)
 }
 
-deregisterDaemon <- function(name){
+deregisterDaemon <- function(name, pid = Sys.getpid()){
     if(!is.null(clientData$connections[[name]])){
+        writeData(clientData$connections[[name]],
+                  request.deregister(pid))
         close(clientData$connections[[name]])
         clientData$connections[[name]] <- NULL
         clientData$ports[[name]] <- NULL
@@ -73,38 +80,57 @@ killDaemon <- function(name){
 }
 
 existsDaemon <- function(name){
-    pid <- getDaemonPid(name)
-    if(is.na(pid)){
-        FALSE
+    daemonPid <- getDaemonPid(name)
+    daemonPort <- getDaemonPort(name)
+    if(!is.na(daemonPid)&&
+       !is.na(daemonPort)&&
+       isProcessAlive(daemonPid)&&
+       portOccupied(daemonPort)){
+        TRUE
     }else{
-        isProcessAlive(pid)
+        FALSE
     }
 }
 
-daemonSetTask <- function(name, expr){
+daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     
-    task <- request.setTask(substitute(expr))
+    task <- request.setTask(substitute(expr), pid = pid)
     writeData(con, task)
 }
 
-daemonSetTaskScript <- function(name, path){
+daemonGetTask <- function(name, expr, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     
-    
+    task <- request.getTask(pid = pid)
+    flushData(con)
+    writeData(con, task)
+    waitData(con)
 }
 
-daemonExport <- function(name, ...){
+daemonSetTaskScript <- function(name, script, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     
-    x <- request.export(list(...))
+    expr <- parse(file = script)
+    task <- request.setTask(expr, pid = pid)
+    writeData(con, task)
+}
+
+daemonExport <- function(name, ..., pid = Sys.getpid()){
+    con <- clientData$connections[[name]]
+    stopifnot(!is.null(con))
+    
+    x <- request.export(list(...), pid = pid)
     writeData(con, x)
 }
 
-
-
-
-
+daemonCopyTask <- function(name, sourcePid, targetPid = Sys.getpid()){
+    con <- clientData$connections[[name]]
+    stopifnot(!is.null(con))
+    
+    task <- request.copyTask(sourcePid, targetPid)
+    writeData(con, task)
+}

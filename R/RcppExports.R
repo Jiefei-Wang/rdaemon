@@ -5,6 +5,10 @@ send_SIGINT <- function(pid) {
     .Call(`_rdaemon_send_SIGINT`, pid)
 }
 
+detachConsole <- function() {
+    invisible(.Call(`_rdaemon_detachConsole`))
+}
+
 existsGlobalVariable <- function(sharedMemoryName) {
     .Call(`_rdaemon_existsGlobalVariable`, sharedMemoryName)
 }
