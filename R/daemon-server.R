@@ -7,11 +7,12 @@ serverData$tasks <- list()
 serverData$taskData <- list()
 
 
-runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logPath = NULL){
-    if(!is.null(logPath)&&nzchar(logPath)){
-        con <- file(logPath, open = "wt", blocking = FALSE)
+runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL){
+    if(!is.null(logFile)&&nzchar(logFile)){
+        con <- file(logFile, open = "wt", blocking = FALSE)
         sink(con, append=TRUE)
         sink(con, append=TRUE, type="message")
+        message("Daemon PID: ", Sys.getpid())
         on.exit({
             sink() 
             sink(type="message")

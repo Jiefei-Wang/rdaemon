@@ -34,34 +34,42 @@ loadDaemon <- function(name, pid = Sys.getpid()){
         deregisterDaemon(name, pid = pid)
     }
     
-    if(existsDaemon(name)&&
-       is.null(clientData$connections[[name]])
-    ){
-        con <- socketConnection(port = daemonPort, open = "r+")
-        writeData(con, pid)
-        clientData$connections[[name]] <- con
-        clientData$ports[[name]] <- daemonPort
-        clientData$pids[[name]] <- daemonPid
+    if(existsDaemon(name)){
+        if(is.null(clientData$connections[[name]])){
+            con <- socketConnection(port = daemonPort, open = "r+")
+            writeData(con, pid)
+            clientData$connections[[name]] <- con
+            clientData$ports[[name]] <- daemonPort
+            clientData$pids[[name]] <- daemonPid
+        }
+        TRUE
+    }else{
+        FALSE
     }
 }
 
-registerDaemon <- function(name, pid = pid, logPath = NULL){
+#' @export
+registerDaemon <- function(name, pid = pid, logFile = NULL){
     ## TODO: run daemon in the background
     if(!existsDaemon(name)){
         rscript <- R.home("bin/Rscript")
-        script <- system.file(package="rdaemon", "script", "startDaemon.R")
+        script <- system.file(package="rdaemon", "scripts", "startDaemon.R")
         Sys.setenv(rdaemon_name = name)
-        if(!is.null(logPath))
-            Sys.setenv(rdaemon_logPath = logPath)
+        if(!is.null(logFile))
+            Sys.setenv(rdaemon_logFile = logFile)
         system2(rscript, shQuote(script), stdout = FALSE, wait = FALSE)
     }
-    loadDaemon(name)
+    Sys.sleep(1)
+    while(!loadDaemon(name)){
+        
+    }
 }
 
+#' @export
 deregisterDaemon <- function(name, pid = Sys.getpid()){
     if(!is.null(clientData$connections[[name]])){
         writeData(clientData$connections[[name]],
-                  request.deregister(pid))
+                  request.removeClient(pid))
         close(clientData$connections[[name]])
         clientData$connections[[name]] <- NULL
         clientData$ports[[name]] <- NULL
@@ -69,6 +77,7 @@ deregisterDaemon <- function(name, pid = Sys.getpid()){
     }
 }
 
+#' @export
 killDaemon <- function(name){
     pid <- getDaemonPid(name)
     if(is.na(pid))
@@ -79,6 +88,7 @@ killDaemon <- function(name){
     }
 }
 
+#' @export
 existsDaemon <- function(name){
     daemonPid <- getDaemonPid(name)
     daemonPort <- getDaemonPort(name)
@@ -92,6 +102,7 @@ existsDaemon <- function(name){
     }
 }
 
+#' @export
 daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
@@ -100,6 +111,7 @@ daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
     writeData(con, task)
 }
 
+#' @export
 daemonGetTask <- function(name, expr, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
@@ -110,6 +122,7 @@ daemonGetTask <- function(name, expr, pid = Sys.getpid()){
     waitData(con)
 }
 
+#' @export
 daemonSetTaskScript <- function(name, script, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
@@ -119,6 +132,7 @@ daemonSetTaskScript <- function(name, script, pid = Sys.getpid()){
     writeData(con, task)
 }
 
+#' @export
 daemonExport <- function(name, ..., pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
@@ -127,6 +141,7 @@ daemonExport <- function(name, ..., pid = Sys.getpid()){
     writeData(con, x)
 }
 
+#' @export
 daemonCopyTask <- function(name, sourcePid, targetPid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
