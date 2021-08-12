@@ -49,7 +49,7 @@ loadDaemon <- function(name, pid = Sys.getpid()){
 }
 
 #' @export
-registerDaemon <- function(name, pid = pid, logFile = NULL){
+client.registerDaemon <- function(name, pid = pid, logFile = NULL){
     ## TODO: run daemon in the background
     if(!existsDaemon(name)){
         rscript <- R.home("bin/Rscript")
@@ -66,7 +66,7 @@ registerDaemon <- function(name, pid = pid, logFile = NULL){
 }
 
 #' @export
-deregisterDaemon <- function(name, pid = Sys.getpid()){
+client.deregisterDaemon <- function(name, pid = Sys.getpid()){
     if(!is.null(clientData$connections[[name]])){
         writeData(clientData$connections[[name]],
                   request.removeClient(pid))
@@ -78,7 +78,7 @@ deregisterDaemon <- function(name, pid = Sys.getpid()){
 }
 
 #' @export
-killDaemon <- function(name){
+client.killDaemon <- function(name){
     pid <- getDaemonPid(name)
     if(is.na(pid))
         return()
@@ -89,7 +89,7 @@ killDaemon <- function(name){
 }
 
 #' @export
-existsDaemon <- function(name){
+client.existsDaemon <- function(name){
     daemonPid <- getDaemonPid(name)
     daemonPort <- getDaemonPort(name)
     if(!is.na(daemonPid)&&
@@ -103,7 +103,7 @@ existsDaemon <- function(name){
 }
 
 #' @export
-daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
+client.daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     
@@ -112,7 +112,7 @@ daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
 }
 
 #' @export
-daemonGetTask <- function(name, expr, pid = Sys.getpid()){
+client.daemonGetTask <- function(name, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     
@@ -122,27 +122,18 @@ daemonGetTask <- function(name, expr, pid = Sys.getpid()){
     waitData(con)
 }
 
-#' @export
-daemonSetTaskScript <- function(name, script, pid = Sys.getpid()){
-    con <- clientData$connections[[name]]
-    stopifnot(!is.null(con))
-    
-    expr <- parse(file = script)
-    task <- request.setTask(expr, pid = pid)
-    writeData(con, task)
-}
 
 #' @export
-daemonExport <- function(name, ..., pid = Sys.getpid()){
+client.daemonExport <- function(name, objects, pid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     
-    x <- request.export(list(...), pid = pid)
+    x <- request.export(objects, pid = pid)
     writeData(con, x)
 }
 
 #' @export
-daemonCopyTask <- function(name, sourcePid, targetPid = Sys.getpid()){
+client.daemonCopyTask <- function(name, sourcePid, targetPid = Sys.getpid()){
     con <- clientData$connections[[name]]
     stopifnot(!is.null(con))
     

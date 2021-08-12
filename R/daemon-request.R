@@ -29,11 +29,11 @@ request.removeClient <- function(pid){
     )
 }
 
-request.copyTask <- function(sourcePid, destPid){
+request.copyTask <- function(sourcePid, targetPid){
     list(
-        pid = sourcePid,
+        pid = targetPid,
         type = "copyTask",
-        data = destPid
+        data = sourcePid
     )
 }
 
