@@ -32,6 +32,7 @@ runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL
         detachConsole()
     }
     
+    
     ## The daemon loop
     repeat{
         tryCatch(
@@ -78,18 +79,20 @@ acceptConnections <- function(){
                 suppressWarnings(
                     socketAccept(serverData$serverConn, open = "r+", timeout = 1)
                 )
-            pid <- waitData(con, timeout = 10)
-            if(is.null(pid)){
+            msg <- waitData(con, timeout = 10)
+            if(!isHandshake(msg)){
                 stop("Handshake failed, cannot establish the new connection!")
             }
-            pid <- as.character(pid)
-            oldCon <- serverData$connections[[pid]]
+            pid <- as.character(msg$pid)
+            taskId <- as.character(msg$taskId)
+            oldCon <- serverData$connections[[taskId]]
             if(!is.null(oldCon)){
                 close(oldCon)
             }
-            serverData$connections[[pid]] <- con
-            serverData$task[[pid]] <- NULL
-            serverData$taskData[[pid]] <- new.env(parent = .GlobalEnv)
+            serverData$connections[[taskId]] <- con
+            serverData$task[[taskId]] <- NULL
+            serverData$taskData[[taskId]] <- new.env(parent = .GlobalEnv)
+            serverData$clientPid[[taskId]] <- pid
             TRUE
         },
         error = function(e) FALSE)
@@ -152,7 +155,7 @@ processIndividualRequest <- function(requestPid, request){
         return()
     }
     
-    if(isRemoveClientRequest(request)){
+    if(isRemoveTaskRequest(request)){
         server.deregisterDaemon(targetPid)
         return(TRUE)
     }

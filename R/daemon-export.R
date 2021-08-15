@@ -1,27 +1,44 @@
 #' @export
-registerDaemon <- function(name, pid = pid, logFile = NULL){
+lastRegisteredDaemon <- function(){
+    if(serverData$isServer){
+        serverData$name
+    }else{
+        clientData$lastRegisteredDaemon
+    }
+}
+
+
+#' @export
+daemonTaskId <- function(){
+    if(serverData$isServer){
+        serverData$taskId
+    }else{
+        Sys.getpid()
+    }
+}
+
+
+#' @export
+registerDaemon <- function(name, taskId = daemonTaskId(), logFile = NULL){
     stopifnot(!serverData$isServer)
     client.registerDaemon(
         name = name, 
-        pid = pid, 
+        taskId = taskId, 
         logFile = logFile)
 }
 
 #' @export
-deregisterDaemon <- function(name, pid = Sys.getpid()){
+deregisterDaemon <- function(name = lastRegisteredDaemon(), taskId = daemonTaskId()){
     if(serverData$isServer){
         stopifnot(identical(serverData$name, name))
-        if(missing(pid)){
-            pid <- serverData$taskPid
-        }
-        server.deregisterDaemon(pid = pid)
+        server.deregisterDaemon(taskId = taskId)
     }else{
-        client.deregisterDaemon(name = name, pid = pid)
+        client.deregisterDaemon(name = name, taskId = taskId)
     }
 }
 
 #' @export
-killDaemon <- function(name){
+killDaemon <- function(name = lastRegisteredDaemon()){
     if(serverData$isServer && identical(serverData$name, name)){
         quit(save = "no")
     }else{
@@ -30,7 +47,7 @@ killDaemon <- function(name){
 }
 
 #' @export
-existsDaemon <- function(name){
+existsDaemon <- function(name = lastRegisteredDaemon()){
     daemonPid <- getDaemonPid(name)
     daemonPort <- getDaemonPort(name)
     if(!is.na(daemonPid)&&
@@ -44,75 +61,53 @@ existsDaemon <- function(name){
 }
 
 #' @export
-daemonSetTask <- function(name, expr = NULL, pid = Sys.getpid()){
+daemonSetTask <- function(expr = NULL, taskId = daemonTaskId(), name = lastRegisteredDaemon()){
     if(serverData$isServer){
         stopifnot(identical(serverData$name, name))
-        if(missing(pid)){
-            pid <- serverData$taskPid
-        }
-        server.daemonSetTask(expr = expr, pid = pid)
+        server.daemonSetTask(expr = expr, taskId = taskId)
     }else{
-        client.daemonSetTask(name = name, expr = expr, pid = pid)
+        client.daemonSetTask(name = name, expr = expr, taskId = taskId)
     }
 }
 
 #' @export
-daemonGetTask <- function(name, pid = Sys.getpid()){
+daemonGetTask <- function(taskId = daemonTaskId(), name = lastRegisteredDaemon()){
     if(serverData$isServer){
         stopifnot(identical(serverData$name, name))
-        if(missing(pid)){
-            pid <- serverData$taskPid
-        }
-        server.daemonGetTask(pid = pid)
+        server.daemonGetTask(taskId = taskId)
     }else{
-        client.daemonGetTask(name = name, pid = pid)
+        client.daemonGetTask(name = name, taskId = taskId)
     }
 }
 
 #' @export
-daemonSetTaskScript <- function(name, script, pid = Sys.getpid()){
+daemonSetTaskScript <- function(script, taskId = daemonTaskId(), name = lastRegisteredDaemon()){
     expr <- parse(file = script)
-    if(missing(pid)){
-            pid <- serverData$taskPid
-    }
-    daemonSetTask(name = name, expr = expr, pid = pid)
+    daemonSetTask(name = name, expr = expr, taskId = taskId)
 }
 
 #' @export
-daemonExport <- function(name, ..., pid = Sys.getpid()){
+daemonExport <- function(..., taskId = daemonTaskId(), name = lastRegisteredDaemon()){
     objects <- list(...)
     if(serverData$isServer){
         stopifnot(identical(serverData$name, name))
-        if(missing(pid)){
-            pid <- serverData$taskPid
-        }
-        server.daemonExport(objects = objects, pid = pid)
+        server.daemonExport(objects = objects, taskId = taskId)
     }else{
-        client.daemonExport(name = name, objects = objects, pid = pid)
+        client.daemonExport(name = name, objects = objects, taskId = taskId)
     }
 }
 
 #' @export
-daemonCopyTask <- function(name, sourcePid, targetPid = Sys.getpid()){
+daemonCopyTask <- function(sourceId, targetId = daemonTaskId(), name = lastRegisteredDaemon()){
    if(serverData$isServer){
         stopifnot(identical(serverData$name, name))
-        if(missing(targetPid)){
-            targetPid <- serverData$taskPid
+        if(missing(targetId)){
+            targetId <- serverData$taskId
         }
-        server.daemonCopyTask(sourcePid = sourcePid, targetPid = targetPid)
+        server.daemonCopyTask(sourceId = sourceId, targetId = targetId)
     }else{
-        client.daemonCopyTask(name = name, sourcePid = sourcePid, targetPid = targetPid)
+        client.daemonCopyTask(name = name, sourceId = sourceId, targetId = targetId)
     }
 }
 
 
-
-#' @export
-serverDaemonName <- function(){
-    serverData$name
-}
-
-#' @export
-serverDaemonTaskPid <- function(){
-    serverData$taskPid
-}
