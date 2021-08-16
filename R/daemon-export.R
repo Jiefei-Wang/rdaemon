@@ -66,7 +66,15 @@ existsDaemon <- function(daemonName = lastRegisteredDaemon()){
 #' @export
 daemonSetTask <- function(expr = NULL, 
                           daemonName = lastRegisteredDaemon(),
-                          taskId = daemonTaskId()){
+                          taskId = daemonTaskId(),
+                          expr.char = NULL){
+    stopifnot(xor(missing(expr), missing(expr.char)))
+    if(missing(expr.char)){
+        expr <- substitute(expr)
+    }else{
+        expr <- parse(text = expr.char)
+    }
+    
     if(serverData$isServer){
         stopifnot(identical(serverData$daemonName, daemonName))
         server.setTask(expr = expr, taskId = taskId)
@@ -78,9 +86,21 @@ daemonSetTask <- function(expr = NULL,
 }
 
 #' @export
+daemonSetTaskScript <- function(script, 
+                                daemonName = lastRegisteredDaemon(), 
+                                taskId = daemonTaskId()){
+    stopifnot(!serverData$isServer)
+    script <- readChar(script, file.info(script)$size)
+    daemonSetTask(daemonName = daemonName, 
+                  taskId = taskId, 
+                  expr.char = script)
+}
+
+#' @export
 daemonEval <- function(expr,
                        daemonName = lastRegisteredDaemon(), 
                        taskId = daemonTaskId()){
+    expr <- substitute(expr)
     response <-if(serverData$isServer){
         stopifnot(identical(serverData$daemonName, daemonName))
         server.eval(expr = expr, taskId = taskId)
@@ -106,14 +126,6 @@ daemonGetTask <- function(daemonName = lastRegisteredDaemon(),
     }else{
         client.getTask(daemonName = daemonName, taskId = taskId)
     }
-}
-
-#' @export
-daemonSetTaskScript <- function(script, 
-                                daemonName = lastRegisteredDaemon(), 
-                                taskId = daemonTaskId()){
-    expr <- parse(file = script)
-    daemonSetTask(daemonName = daemonName, expr = expr, taskId = taskId)
 }
 
 #' @export

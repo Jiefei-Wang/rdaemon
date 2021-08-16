@@ -8,6 +8,7 @@ request.setTask <- function(taskId, expr){
 
 request.eval <- function(taskId, expr){
     list(
+        pid = Sys.getpid(),
         taskId = taskId,
         type = "eval",
         data = expr
@@ -46,11 +47,10 @@ request.copyTask <- function(sourcePid, targetPid){
     )
 }
 
-request.handshake <- function(taskId){
+request.handshake <- function(){
     list(
         pid = Sys.getpid(),
-        type = "handshake",
-        data = taskId
+        type = "handshake"
     )
 }
 
@@ -69,6 +69,8 @@ request.close <- function(taskIds){
         data = taskIds
     )
 }
+
+
 
 isSetTaskRequest <- function(msg){
     msg$type == "setTask"
@@ -106,3 +108,4 @@ isHandshake <- function(msg){
 isOneTimeConnection <- function(msg){
     msg$type == "oneTimeConnection"
 }
+

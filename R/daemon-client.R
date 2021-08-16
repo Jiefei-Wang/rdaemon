@@ -80,11 +80,11 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
 
 .writeToDaemon <- function(con, request, 
                            waitResponse = FALSE, 
-                           timeout = 10){
+                           timeout = 60*60*24*30){
     flushData(con)
     writeData(con, request)
     if(waitResponse)
-        waitData(con, timeout = timeout)
+        waitData(con, timeout = timeout)$data
     else
         NULL
 }
@@ -92,7 +92,7 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
 .writeOneTimeRequest <- function(daemonName, 
                                  request, 
                                  waitResponse = FALSE, 
-                                 timeout = 10){
+                                 timeout = 60*60*24*30){
     daemonPort <- getDaemonPort(daemonName)
     daemonPid <- getDaemonPid(daemonName)
     con <- socketConnection(port = daemonPort, open = "r+")
@@ -114,7 +114,7 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
         con <- .connection(daemonName)
         .writeToDaemon(con, request, 
                        waitResponse = waitResponse,
-                       timeout = 0)
+                       timeout = timeout)
     }else{
         .writeOneTimeRequest(con, request, 
                              waitResponse = waitResponse, 
@@ -210,7 +210,7 @@ client.deregisterDaemon <-
 
 
 client.killDaemon <- function(daemonName = lastRegisteredDaemon()){
-    if(client.existsDaemon(daemonName)){
+    if(existsDaemon(daemonName)){
         pid <- getDaemonPid(daemonName)
         tools::pskill(pid, tools::SIGTERM)
     }
@@ -221,12 +221,13 @@ client.setTask <-
     function(daemonName = lastRegisteredDaemon(), 
              taskId = daemonTaskId(), 
              expr = NULL){
-        request <- request.setTask(taskId = taskId, expr = substitute(expr))
+        request <- request.setTask(taskId = taskId, expr = expr)
         
         .sendRequest(daemonName = daemonName, 
                      request = request,
                      waitResponse = FALSE)
-        .addTaskId(taskId)
+        .addTaskId(daemonName = daemonName,
+                   taskId = taskId)
         invisible()
     }
 
@@ -234,7 +235,7 @@ client.setTask <-
 client.eval <- function(daemonName = lastRegisteredDaemon(), 
                         taskId = daemonTaskId(), 
                         expr = NULL){
-    request <- request.eval(taskId = taskId, expr = substitute(expr))
+    request <- request.eval(taskId = taskId, expr = expr)
     
     response <- .sendRequest(daemonName = daemonName, 
                              request = request,

@@ -63,4 +63,8 @@ server.deleteTask <- function(taskId){
     }
 }
 
+server.response <- function(con, x){
+    response <- list(data = x)
+    writeData(con, response)
+}
 

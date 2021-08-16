@@ -1,4 +1,8 @@
-runDaemon <- function(daemonName, interruptable = TRUE, detach = FALSE, logFile = NULL){
+runDaemon <- function(daemonName, 
+                      interruptable = TRUE, 
+                      detach = FALSE, 
+                      logFile = NULL,
+                      debug = FALSE){
     ## log system
     if(!is.null(logFile)&&nzchar(logFile)){
         con <- file(logFile, open = "wt", blocking = FALSE)
@@ -16,6 +20,8 @@ runDaemon <- function(daemonName, interruptable = TRUE, detach = FALSE, logFile 
     serverData$port <- findPort()
     ## Run and check if this daemon gets the permission to continue
     serverData$serverConn <- serverSocket(serverData$port)
+    stopifnot(!is.null(serverData$serverConn))
+    
     setDaemonPort(daemonName, serverData$port)
     setDaemonPid(daemonName, Sys.getpid())
     Sys.sleep(1)
@@ -26,12 +32,12 @@ runDaemon <- function(daemonName, interruptable = TRUE, detach = FALSE, logFile 
     }
     serverData$daemonName <- daemonName
     serverData$isServer <- TRUE
-    on.exit(quitDaemon(), add = TRUE)
+    if(!debug)
+        on.exit(quitDaemon(), add = TRUE)
     
     if(detach){
         detachConsole()
     }
-    
     
     ## The daemon loop
     repeat{
@@ -93,15 +99,16 @@ acceptConnections <- function(){
                 next
             }
             
-            taskId <- as.character(request$taskId)
-            oldCon <- serverData$connections[[taskId]]
+            oldCon <- serverData$connections[[pid]]
             if(!is.null(oldCon)){
                 close(oldCon)
             }
             serverData$connections[[pid]] <- con
             TRUE
         },
-        error = function(e) FALSE)
+        error = function(e) {
+            FALSE
+        })
     }
 }
 
@@ -144,8 +151,9 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
     data <- request$data
     if(is.null(pid))
         pid <- as.character(request$pid)
-    if(is.null(con))
-        con <- serverData$connections[[pid]]
+    if(is.null(con) && length(pid)!=0)
+            con <- serverData$connections[[pid]]
+        
     if(isSetTaskRequest(request)){
         server.setTask(expr = data, taskId = taskId)
         return()
@@ -156,7 +164,7 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
             stop("The connection to the pid `",pid,"` does not exist")
         }
         result <- server.eval(expr = data, taskId = taskId)
-        writeData(con, result)
+        server.response(con, result)
         return()
     }
     
@@ -165,7 +173,9 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
         if(is.null(con)){
             stop("The connection to the pid `",pid,"` does not exist")
         }
-        writeData(con, server.getTask(taskId = taskId))
+        
+        result <- server.getTask(taskId = taskId)
+        server.response(con, result)
         return()
     }
     
