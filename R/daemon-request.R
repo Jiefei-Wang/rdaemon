@@ -6,8 +6,17 @@ request.setTask <- function(taskId, expr){
     )
 }
 
+request.eval <- function(taskId, expr){
+    list(
+        taskId = taskId,
+        type = "eval",
+        data = expr
+    )
+}
+
 request.getTask <- function(taskId){
     list(
+        pid = Sys.getpid(),
         taskId = taskId,
         type = "getTask"
     )
@@ -22,10 +31,10 @@ request.export <- function(taskId, objects){
     )
 }
 
-request.removeTask <- function(taskId){
+request.deleteTask <- function(taskId){
     list(
         taskId = taskId,
-        type = "removeTask"
+        type = "deleteTask"
     )
 }
 
@@ -41,13 +50,32 @@ request.handshake <- function(taskId){
     list(
         pid = Sys.getpid(),
         type = "handshake",
-        taskId = taskId
+        data = taskId
     )
 }
 
+request.oneTimeConnection <- function(request){
+    list(
+        pid = Sys.getpid(),
+        type = "oneTimeConnection",
+        data = request
+    )
+}
+
+request.close <- function(taskIds){
+    list(
+        pid = Sys.getpid(),
+        type = "close",
+        data = taskIds
+    )
+}
 
 isSetTaskRequest <- function(msg){
     msg$type == "setTask"
+}
+
+isEval <- function(msg){
+   msg$type == "eval"
 }
 
 isGetTaskRequest <- function(msg){
@@ -58,14 +86,23 @@ isExportRequest <- function(msg){
     msg$type == "export"
 }
 
-isRemoveTaskRequest <- function(msg){
-    msg$type == "removeTask"
+isDeleteTaskRequest <- function(msg){
+    msg$type == "deleteTask"
 }
 
 isCopyTask <- function(msg){
     msg$type == "copyTask"
 }
 
+isClose <- function(msg){
+    msg$type == "close"
+}
+
+
 isHandshake <- function(msg){
     msg$type == "handshake"
+}
+
+isOneTimeConnection <- function(msg){
+    msg$type == "oneTimeConnection"
 }

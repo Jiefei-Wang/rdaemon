@@ -1,4 +1,4 @@
-runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL){
+runDaemon <- function(daemonName, interruptable = TRUE, detach = FALSE, logFile = NULL){
     ## log system
     if(!is.null(logFile)&&nzchar(logFile)){
         con <- file(logFile, open = "wt", blocking = FALSE)
@@ -16,15 +16,15 @@ runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL
     serverData$port <- findPort()
     ## Run and check if this daemon gets the permission to continue
     serverData$serverConn <- serverSocket(serverData$port)
-    setDaemonPort(name, serverData$port)
-    setDaemonPid(name, Sys.getpid())
+    setDaemonPort(daemonName, serverData$port)
+    setDaemonPid(daemonName, Sys.getpid())
     Sys.sleep(1)
-    if(getDaemonPort(name) != serverData$port){
+    if(getDaemonPort(daemonName) != serverData$port){
         close(serverData$serverConn)
         serverData$serverConn <- NULL
         return()
     }
-    serverData$name <- name
+    serverData$daemonName <- daemonName
     serverData$isServer <- TRUE
     on.exit(quitDaemon(), add = TRUE)
     
@@ -66,8 +66,9 @@ runDaemon <- function(name, interruptable = TRUE, detach = FALSE, logFile = NULL
 quitDaemon <- function(){
     close(serverData$serverConn)
     serverData$serverConn <- NULL
-    setDaemonPort(name, NA_integer_)
-    setDaemonPid(name, NA_integer_)
+    daemonName <- serverData$daemonName
+    setDaemonPort(daemonName, NA_integer_)
+    setDaemonPid(daemonName, NA_integer_)
     serverData$isServer <- FALSE
 }
 
@@ -79,20 +80,25 @@ acceptConnections <- function(){
                 suppressWarnings(
                     socketAccept(serverData$serverConn, open = "r+", timeout = 1)
                 )
-            msg <- waitData(con, timeout = 10)
-            if(!isHandshake(msg)){
-                stop("Handshake failed, cannot establish the new connection!")
+            request <- waitData(con, timeout = 10)
+            pid <- as.character(request$pid)
+            if(isOneTimeConnection(request)){
+                request <- request$data
+                processIndividualRequest(request = request, pid = pid, con = con)
+                close(con)
+                next
             }
-            pid <- as.character(msg$pid)
-            taskId <- as.character(msg$taskId)
+            if(!isHandshake(request)){
+                close(con)
+                next
+            }
+            
+            taskId <- as.character(request$taskId)
             oldCon <- serverData$connections[[taskId]]
             if(!is.null(oldCon)){
                 close(oldCon)
             }
-            serverData$connections[[taskId]] <- con
-            serverData$task[[taskId]] <- NULL
-            serverData$taskData[[taskId]] <- new.env(parent = .GlobalEnv)
-            serverData$clientPid[[taskId]] <- pid
+            serverData$connections[[pid]] <- con
             TRUE
         },
         error = function(e) FALSE)
@@ -100,18 +106,18 @@ acceptConnections <- function(){
 }
 
 runTasks <- function(){
-    pids <- names(serverData$tasks)
-    for(pid in pids){
-        serverData$taskPid <- pid
+    taskIds <- names(serverData$tasks)
+    for(taskId in taskIds){
+        serverData$currentTaskId <- taskId
         tryCatch(
             {
                 eval(
-                    expr = serverData$tasks[[pid]], 
-                    envir  = serverData$taskData[[pid]])
+                    expr = serverData$tasks[[taskId]], 
+                    envir  = serverData$taskData[[taskId]])
             },
             error = function(e) 
-                message("Error in evaluating the task for the pid ",
-                        pid, ": ", e$message)
+                message("Error in evaluating the task with the id ",
+                        taskId, ": ", e$message)
         )
     }
 }
@@ -120,11 +126,11 @@ runTasks <- function(){
 processRequest <- function(){
     pids <- names(serverData$connections)
     for(pid in pids){
-        con <- serverData$connections[[as.character(pid)]]
+        con <- serverData$connections[[pid]]
         requests <- readData(con)
         for(request in requests){
             tryCatch(
-                processIndividualRequest(pid, request),
+                processIndividualRequest(request),
                 error = function(e) 
                     message("Error in processing the request from the pid ",
                             pid, ": ", e$message)
@@ -133,38 +139,60 @@ processRequest <- function(){
     }
 }
 
-processIndividualRequest <- function(requestPid, request){
-    targetPid <- as.character(request$pid)
+processIndividualRequest <- function(request, pid = NULL, con = NULL){
+    taskId <- as.character(request$taskId)
     data <- request$data
+    if(is.null(pid))
+        pid <- as.character(request$pid)
+    if(is.null(con))
+        con <- serverData$connections[[pid]]
     if(isSetTaskRequest(request)){
-        server.daemonSetTask(expr = data, pid = targetPid)
+        server.setTask(expr = data, taskId = taskId)
         return()
     }
     
-    if(isGetTaskRequest(request)){
-        con <- serverData$connections[[requestPid]]
+    if(isEval(request)){
         if(is.null(con)){
-            stop("Cannot send the task back, the connection is closed")
+            stop("The connection to the pid `",pid,"` does not exist")
         }
-        writeData(con, server.daemonGetTask(pid = targetPid))
+        result <- server.eval(expr = data, taskId = taskId)
+        writeData(con, result)
+        return()
+    }
+    
+    
+    if(isGetTaskRequest(request)){
+        if(is.null(con)){
+            stop("The connection to the pid `",pid,"` does not exist")
+        }
+        writeData(con, server.getTask(taskId = taskId))
         return()
     }
     
     if(isExportRequest(request)){
-        server.daemonExport(objects = data, pid= targetPid)
+        server.export(taskId = taskId, objects = data)
         return()
     }
     
-    if(isRemoveTaskRequest(request)){
-        server.deregisterDaemon(targetPid)
+    if(isDeleteTaskRequest(request)){
+        server.deleteTask(taskId)
         return(TRUE)
     }
     
     if(isCopyTask(request)){
-        sourcePid <- data
-        server.daemonCopyTask(sourcePid = sourcePid, targetPid = targetPid)
+        sourceId <- data
+        server.copyTask(sourceId = sourceId, targetId = taskId)
         return()
     }
+    
+    if(isClose(request)){
+        if(is.null(con)){
+            stop("The connection to the pid `",pid,"` does not exist")
+        }
+        close(con)
+        serverData$connections[[pid]] <- NULL
+    }
+    
     
     stop("Unknown task type: ", request$type)
 }
