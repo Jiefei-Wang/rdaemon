@@ -1,4 +1,5 @@
-interruptWorker <- function(pid){
+#' @export
+interruptProcess <- function(pid){
     if(Sys.info()[['sysname']]=="Windows"){
         send_SIGINT(pid)
     }else{
@@ -6,6 +7,7 @@ interruptWorker <- function(pid){
     }
 }
 
+#' @export
 isProcessAlive <- function(pid){
     tryCatch(
         if(Sys.info()[['sysname']]=="Windows"){

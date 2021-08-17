@@ -74,6 +74,7 @@ daemonSetTask <- function(expr = NULL,
     if(missing(expr.char)){
         expr <- substitute(expr)
     }else{
+        expr.char <- gsub("\r", "", expr.char)
         expr <- parse(text = expr.char)
     }
     
