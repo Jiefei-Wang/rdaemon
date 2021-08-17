@@ -19,13 +19,15 @@ daemonTaskId <- function(){
 
 
 #' @export
-registerDaemon <- function(
-    daemonName = lastRegisteredDaemon(), 
-    logFile = NULL){
+registerDaemon <- function(daemonName = lastRegisteredDaemon(),
+                           logFile = NULL,
+                           threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
+    threshold <- match.arg(threshold)
     stopifnot(!serverData$isServer)
     client.registerDaemon(
         daemonName = daemonName, 
-        logFile = logFile)
+        logFile = logFile,
+        threshold = threshold)
 }
 
 #' @export
@@ -133,6 +135,9 @@ daemonExport <- function(...,
                          daemonName = lastRegisteredDaemon(), 
                          taskId = daemonTaskId()){
     objects <- list(...)
+    stopifnot(length(names(objects))>0)
+    stopifnot(all(nzchar(names(objects))))
+    
     if(serverData$isServer){
         stopifnot(identical(serverData$daemonName, daemonName))
         server.export(objects = objects, taskId = taskId)

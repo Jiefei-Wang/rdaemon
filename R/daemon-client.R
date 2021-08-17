@@ -1,4 +1,3 @@
-## TODO: use the temp file that is created by the deamon process
 ## Feature:
 ## 1. allow running (named) daemon, one daemon can handle multiple workers
 ## 2. daemon is only able to run the expression and set the data
@@ -168,14 +167,16 @@ loadDaemon <- function(daemonName){
 ## The functions that will be executed in the client
 client.registerDaemon <- 
     function(daemonName = lastRegisteredDaemon(),
-             logFile = NULL){
+             logFile = NULL,threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
         if(!existsDaemon(daemonName)){
             rscript <- R.home("bin/Rscript")
             script <- system.file(package="rdaemon", "scripts", "startDaemon.R")
             ## TODO: unset the environment after use
             Sys.setenv(rdaemon_name = daemonName)
+            Sys.setenv(rdaemon_threshold = threshold)
             if(!is.null(logFile))
                 Sys.setenv(rdaemon_logFile = logFile)
+            
             system2(rscript, shQuote(script), stdout = FALSE, wait = FALSE)
         }
         Sys.sleep(1)

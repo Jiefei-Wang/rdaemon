@@ -1,14 +1,19 @@
+## TODO: remove the closed connection
 runDaemon <- function(daemonName, 
                       interruptable = TRUE, 
                       detach = FALSE, 
                       logFile = NULL,
+                      threshold= c("INFO", "WARN", "ERROR", "DEBUG"),
                       debug = FALSE){
+    threshold <- match.arg(threshold)
+    futile.logger::flog.threshold(get(threshold))
+    
     ## log system
     if(!is.null(logFile)&&nzchar(logFile)){
         con <- file(logFile, open = "wt", blocking = FALSE)
         sink(con, append=TRUE)
         sink(con, append=TRUE, type="message")
-        message("Daemon PID: ", Sys.getpid())
+        flog.info("Daemon PID: ", Sys.getpid())
         on.exit({
             sink() 
             sink(type="message")
@@ -58,13 +63,13 @@ runDaemon <- function(daemonName,
                     message("No task is running, quit daemon")
                     break
                 }
-                message("Client Number:", length(serverData$connections))
+                flog.debug("Client Number: %d", length(serverData$connections))
             },
             error = function(e) 
-                message("Unclassified error: ", e$message),
+                flog.error("Unclassified error: %s", e$message),
             warning = function(e) 
-                message("Unclassified warning: ", e$message),
-            interrupt = function(e) if(interruptable) stop("interrupt")
+                flog.warn("Unclassified warning: %s", e$message),
+            interrupt = function(e) if(interruptable) stop("interrupt", call. = FALSE)
         )
     }
 }
@@ -123,8 +128,15 @@ runTasks <- function(){
                     envir  = serverData$taskData[[taskId]])
             },
             error = function(e) 
-                message("Error in evaluating the task with the id ",
-                        taskId, ": ", e$message)
+                flog.error(
+                    "Error in evaluating the task with the id %s: %s",
+                    taskId, e$message
+                ),
+            warning = function(e)
+                flog.warn(
+                    "Warning in evaluating the task with the id %s: %s",
+                    taskId, e$message
+                )
         )
     }
 }
@@ -139,8 +151,14 @@ processRequest <- function(){
             tryCatch(
                 processIndividualRequest(request),
                 error = function(e) 
-                    message("Error in processing the request from the pid ",
-                            pid, ": ", e$message)
+                    flog.error(
+                        "Error in processing the request from the pid %s: %s",
+                        pid, e$message),
+                warning = function(e)
+                    flog.warn(
+                        "Warning in processing the request from the pid %s: %s",
+                        taskId, e$message
+                    )
             )
         }
     }
@@ -150,10 +168,11 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
     taskId <- as.character(request$taskId)
     data <- request$data
     if(is.null(pid))
-        pid <- as.character(request$pid)
+        pid <- request$pid
+    pid <- as.character(pid)
     if(is.null(con) && length(pid)!=0)
-            con <- serverData$connections[[pid]]
-        
+        con <- serverData$connections[[pid]]
+    
     if(isSetTaskRequest(request)){
         server.setTask(expr = data, taskId = taskId)
         return()
@@ -196,11 +215,15 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
     }
     
     if(isClose(request)){
-        if(is.null(con)){
-            stop("The connection to the pid `",pid,"` does not exist")
+        if(!is.null(con)){
+            close(con)
         }
-        close(con)
         serverData$connections[[pid]] <- NULL
+        for(taskId in as.character(data)){
+            serverData$tasks[[taskId]] <- NULL
+            serverData$taskData[[taskId]] <- NULL
+        }
+        return()
     }
     
     

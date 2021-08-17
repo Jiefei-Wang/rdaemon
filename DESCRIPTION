@@ -10,7 +10,11 @@ Description:
     can connect with the daemon using the daemon name.
 License: GPL (>= 2)
 Imports: 
-    Rcpp (>= 1.0.6)
+    Rcpp (>= 1.0.6),
+    futile.logger
 LinkingTo: Rcpp
 RoxygenNote: 7.1.1
 Encoding: UTF-8
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

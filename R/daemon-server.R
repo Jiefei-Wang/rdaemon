@@ -23,7 +23,7 @@ server.setTask <- function(taskId, expr){
     serverData$tasks[[taskId]] <- expr
 }
 
-server.eval<- function(expr, taskId){
+server.eval<- function(taskId, expr){
     taskId <- as.character(taskId)
     tryCatch(
         eval(expr = expr, 
@@ -40,7 +40,7 @@ server.getTask <- function(taskId){
 server.export <- function(taskId, objects){
     taskId <- as.character(taskId)
     if(is.null(serverData$taskData[[taskId]])){
-        serverData$taskData[[taskId]] <- list()
+        serverData$taskData[[taskId]] <- new.env(parent = globalenv())
     }
     for(i in names(objects)){
         serverData$taskData[[taskId]][[i]] <- objects[[i]]

@@ -24,7 +24,6 @@ request.getTask <- function(taskId){
 }
 
 request.export <- function(taskId, objects){
-    stopifnot(all(nzchar(objects)))
     list(
         taskId = taskId,
         type = "export",
@@ -39,11 +38,11 @@ request.deleteTask <- function(taskId){
     )
 }
 
-request.copyTask <- function(sourcePid, targetPid){
+request.copyTask <- function(sourceId, targetId){
     list(
-        taskId = targetPid,
+        taskId = targetId,
         type = "copyTask",
-        data = sourcePid
+        data = sourceId
     )
 }
 
