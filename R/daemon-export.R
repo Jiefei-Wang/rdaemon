@@ -33,10 +33,10 @@ registerDaemon <- function(daemonName = lastRegisteredDaemon(),
 #' @export
 deregisterDaemon <- function(
     daemonName = lastRegisteredDaemon(), 
-    taskId = daemonTaskId()){
+    deleteTask = TRUE){
     stopifnot(!serverData$isServer)
     client.deregisterDaemon(daemonName = daemonName, 
-                            taskId = taskId)
+                            deleteTask = deleteTask)
 }
 
 #' @export
@@ -49,7 +49,7 @@ killDaemon <- function(daemonName = lastRegisteredDaemon()){
 }
 
 #' @export
-existsDaemon <- function(daemonName = lastRegisteredDaemon()){
+daemonExists <- function(daemonName = lastRegisteredDaemon()){
     if(serverData$isServer && identical(serverData$daemonName, daemonName))
         return(TRUE)
     

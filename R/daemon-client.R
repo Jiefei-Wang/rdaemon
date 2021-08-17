@@ -92,13 +92,14 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
                                  request, 
                                  waitResponse = FALSE, 
                                  timeout = 60*60*24*30){
+    request <- request.oneTimeConnection(request)
     daemonPort <- getDaemonPort(daemonName)
     daemonPid <- getDaemonPid(daemonName)
     con <- socketConnection(port = daemonPort, open = "r+")
-    request <- request.oneTimeConnection(request)
     response <- .writeToDaemon(con = con, 
                                request = request, 
-                               timeout = timeout)
+                               timeout = timeout,
+                               waitResponse = waitResponse)
     close(con)
     return(response)
 }
@@ -106,7 +107,7 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
 .sendRequest <- function(daemonName, request, 
                          waitResponse = FALSE, 
                          timeout = 60*60*24*30){
-    if(!existsDaemon(daemonName))
+    if(!daemonExists(daemonName))
         stop("The daemon '",daemonName,"' does not exist!")
     
     if(.registered(daemonName)){
@@ -115,7 +116,7 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
                        waitResponse = waitResponse,
                        timeout = timeout)
     }else{
-        .writeOneTimeRequest(con, request, 
+        .writeOneTimeRequest(daemonName, request, 
                              waitResponse = waitResponse, 
                              timeout = timeout)
     }
@@ -147,7 +148,7 @@ loadDaemon <- function(daemonName){
     daemonPort <- getDaemonPort(daemonName)
     daemonPid <- getDaemonPid(daemonName)
     
-    if(existsDaemon(daemonName)){
+    if(daemonExists(daemonName)){
         if(!.registered(daemonName)){
             con <- socketConnection(port = daemonPort, open = "r+")
             handShake <- request.handshake()
@@ -168,11 +169,11 @@ loadDaemon <- function(daemonName){
 client.registerDaemon <- 
     function(daemonName = lastRegisteredDaemon(),
              logFile = NULL,threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
-        if(!existsDaemon(daemonName)){
+        if(!daemonExists(daemonName)){
             rscript <- R.home("bin/Rscript")
             script <- system.file(package="rdaemon", "scripts", "startDaemon.R")
             ## TODO: unset the environment after use
-            Sys.setenv(rdaemon_name = daemonName)
+            Sys.setenv(rdaemon_daemonName = daemonName)
             Sys.setenv(rdaemon_threshold = threshold)
             if(!is.null(logFile))
                 Sys.setenv(rdaemon_logFile = logFile)
@@ -189,7 +190,7 @@ client.registerDaemon <-
 client.deregisterDaemon <- 
     function(daemonName = lastRegisteredDaemon(), deleteTask = TRUE)
     {
-        if(!existsDaemon(daemonName))
+        if(!daemonExists(daemonName))
             return(invisible())
         if(deleteTask){
             taskIds <- .taskIds(daemonName)
@@ -197,21 +198,19 @@ client.deregisterDaemon <-
             taskIds <- NULL
         }
         
-        request <- request.close(taskIds = deleteTask)
-        if(.registered(daemonName)){
-            writeData(con, request)
-            .disconnect(daemonName)
-            if(deleteTask){
-                .setTaskIds(daemonName, NULL)
-            }
-        }else{
-            .writeOneTimeRequest(daemonName, request)
+        request <- request.close(taskIds = taskIds)
+        .sendRequest(daemonName = daemonName, 
+                     request = request,
+                     waitResponse = FALSE)
+        .disconnect(daemonName)
+        if(deleteTask){
+            .setTaskIds(daemonName, NULL)
         }
     }
 
 
 client.killDaemon <- function(daemonName = lastRegisteredDaemon()){
-    if(existsDaemon(daemonName)){
+    if(daemonExists(daemonName)){
         pid <- getDaemonPid(daemonName)
         tools::pskill(pid, tools::SIGTERM)
     }
@@ -238,7 +237,7 @@ client.eval <- function(daemonName = lastRegisteredDaemon(),
                         expr = NULL){
     request <- request.eval(taskId = taskId, expr = expr)
     
-    response <- .sendRequest(daemonName = daemonName, 
+    .sendRequest(daemonName = daemonName, 
                              request = request,
                              waitResponse = TRUE)
 }

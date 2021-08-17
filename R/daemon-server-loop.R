@@ -13,7 +13,7 @@ runDaemon <- function(daemonName,
         con <- file(logFile, open = "wt", blocking = FALSE)
         sink(con, append=TRUE)
         sink(con, append=TRUE, type="message")
-        flog.info("Daemon PID: ", Sys.getpid())
+        flog.info("Daemon PID: %d", Sys.getpid())
         on.exit({
             sink() 
             sink(type="message")
@@ -94,6 +94,7 @@ acceptConnections <- function(){
             request <- waitData(con, timeout = 10)
             pid <- as.character(request$pid)
             if(isOneTimeConnection(request)){
+                flog.debug("Receive an one-time request from pid %s", pid)
                 request <- request$data
                 processIndividualRequest(request = request, pid = pid, con = con)
                 close(con)
@@ -222,7 +223,9 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
         for(taskId in as.character(data)){
             serverData$tasks[[taskId]] <- NULL
             serverData$taskData[[taskId]] <- NULL
+            flog.debug("Delete the task %s", taskId)
         }
+        flog.info("The connection to pid %s has been closed", pid)
         return()
     }
     

@@ -1,11 +1,13 @@
-name <- Sys.getenv("rdaemon_name")
+daemonName <- Sys.getenv("rdaemon_daemonName")
 logFile <- Sys.getenv("rdaemon_logFile")
+threshold <- Sys.getenv("rdaemon_threshold")
 
-stopifnot(nzchar(name))
+stopifnot(nzchar(daemonName))
 library(rdaemon)
 rdaemon:::runDaemon(
-    name = name, 
+    daemonName = daemonName, 
     interruptable = FALSE, 
     detach = TRUE, 
-    logFile = logFile
+    logFile = logFile,
+    threshold = threshold
 )

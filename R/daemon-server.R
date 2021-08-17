@@ -13,7 +13,7 @@ serverData$taskData <- list()
 ## timeout: Time to wait before quit if no task is running
 ## isServer: Whether this is a daemon server
 ## taskPid: The pid corresponds to the currently processed task
-serverData$timeout <- 60
+serverData$timeout <- 10*60
 serverData$isServer <- FALSE
 serverData$currentTaskId <- NULL
 
@@ -51,7 +51,9 @@ server.export <- function(taskId, objects){
 server.copyTask <- function(sourceId, targetId){
     sourceId <- as.character(sourceId)
     targetId <- as.character(targetId)
-    serverData$taskData[[targetId]] <- serverData$taskData[[sourceId]]
+    sourceEnv <- serverData$taskData[[sourceId]]
+    serverData$taskData[[targetId]] <- as.environment(as.list(sourceEnv, all.names=TRUE))
+    parent.env(serverData$taskData[[targetId]]) <- globalenv()
     serverData$tasks[[targetId]] <- serverData$tasks[[sourceId]]
 }
 
