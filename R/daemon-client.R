@@ -168,7 +168,8 @@ loadDaemon <- function(daemonName){
 ## The functions that will be executed in the client
 client.registerDaemon <- 
     function(daemonName = lastRegisteredDaemon(),
-             logFile = NULL,threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
+             logFile = NULL, 
+             threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
         if(!daemonExists(daemonName)){
             rscript <- R.home("bin/Rscript")
             script <- system.file(package="rdaemon", "scripts", "startDaemon.R")

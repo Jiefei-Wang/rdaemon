@@ -2,6 +2,9 @@ daemonName <- Sys.getenv("rdaemon_daemonName")
 logFile <- Sys.getenv("rdaemon_logFile")
 threshold <- Sys.getenv("rdaemon_threshold")
 
+if(!nzchar(logFile))
+    logFile <- tempfile(fileext = ".txt")
+
 stopifnot(nzchar(daemonName))
 library(rdaemon)
 rdaemon:::runDaemon(

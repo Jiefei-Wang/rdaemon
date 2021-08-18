@@ -27,3 +27,6 @@ readTxt <- function(file){
     readChar(file, file.info(file)$size)
 }
 
+
+
+

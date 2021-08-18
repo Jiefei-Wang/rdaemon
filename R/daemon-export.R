@@ -150,6 +150,17 @@ daemonExport <- function(...,
 }
 
 #' @export
+daemonLogs <- function(daemonName = lastRegisteredDaemon()){
+    logPath <- daemonEval(daemonName = daemonName, 
+                          expr = rdaemon:::serverData$logFile)
+    stopifnot(!is.null(logPath))
+    stopifnot(file.exists(logPath))
+    
+    readLines(logPath)
+}
+
+
+#' @export
 daemonCopyTask <- function(sourceId, 
                            targetId = daemonTaskId(), 
                            daemonName = lastRegisteredDaemon()){

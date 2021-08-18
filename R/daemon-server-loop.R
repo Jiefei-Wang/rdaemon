@@ -11,8 +11,9 @@ runDaemon <- function(daemonName,
     ## log system
     if(!is.null(logFile)&&nzchar(logFile)){
         con <- file(logFile, open = "wt", blocking = FALSE)
-        sink(con, append=TRUE)
-        sink(con, append=TRUE, type="message")
+        sink(con, append = FALSE)
+        sink(con, append = FALSE, type = "message")
+        serverData$logFile <- logFile
         flog.info("Daemon PID: %d", Sys.getpid())
         on.exit({
             sink() 
