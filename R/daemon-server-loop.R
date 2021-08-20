@@ -4,8 +4,58 @@ runDaemon <- function(daemonName,
                       detach = FALSE, 
                       logFile = NULL,
                       threshold= c("INFO", "WARN", "ERROR", "DEBUG"),
-                      debug = FALSE){
+                      cleanup = TRUE){
     threshold <- match.arg(threshold)
+    enableLog(logFile = logFile, threshold = threshold)
+    
+    ## Start the server connection
+    startServerConnection(daemonName = daemonName)
+    if(cleanup)
+        on.exit(quitDaemon(), add = TRUE)
+    
+    if(detach){
+        detachConsole()
+    }
+    
+    ## The daemon loop
+    resetTimer("server", "loop")
+    .suspendInterruptsIfRequired({
+        continue <- TRUE
+        while(continue){
+            handleExceptions({
+                continue <- daemonLoop()
+            },
+            warningPrefix = "Unclassified warning",
+            errorPrefix = "Unclassified error")
+        }
+    }, 
+    interruptable = interruptable)
+}
+
+daemonLoop <- function(){
+    ## Accept new connections
+    acceptConnections()
+    
+    ## run the existing tasks
+    runTasks()
+    
+    ## process incoming requests
+    processRequest()
+    
+    ## Check if the daemon is timeout
+    timeout <- isLoopTimeout()
+    if(timeout){
+        flog.info("No task is running, quit daemon")
+        return(FALSE)
+    }
+    flog.debug("Client Number: %d", length(serverData$connections))
+    TRUE
+}
+
+
+
+
+enableLog <- function(logFile, threshold){
     futile.logger::flog.threshold(get(threshold))
     
     ## log system
@@ -15,13 +65,15 @@ runDaemon <- function(daemonName,
         sink(con, append = FALSE, type = "message")
         serverData$logFile <- logFile
         flog.info("Daemon PID: %d", Sys.getpid())
-        on.exit({
-            sink() 
-            sink(type="message")
-            close(con)
-        })
     }
-    
+}
+
+disableLog <- function(){
+    sink(con, append = FALSE)
+    sink(con, append = FALSE, type = "message")
+}
+
+startServerConnection <- function(daemonName){
     ## Try to start the daemon server
     serverData$port <- findPort()
     ## Run and check if this daemon gets the permission to continue
@@ -38,41 +90,7 @@ runDaemon <- function(daemonName,
     }
     serverData$daemonName <- daemonName
     serverData$isServer <- TRUE
-    if(!debug)
-        on.exit(quitDaemon(), add = TRUE)
-    
-    if(detach){
-        detachConsole()
-    }
-    
-    ## The daemon loop
-    repeat{
-        tryCatch(
-            {
-                ## Accept new connections
-                acceptConnections()
-                
-                ## run the existing task
-                runTasks()
-                
-                ## process incoming request
-                processRequest()
-                
-                ## Check if the daemon is timeout
-                timeout <- checkTimeout()
-                if(timeout){
-                    message("No task is running, quit daemon")
-                    break
-                }
-                flog.debug("Client Number: %d", length(serverData$connections))
-            },
-            error = function(e) 
-                flog.error("Unclassified error: %s", e$message),
-            warning = function(e) 
-                flog.warn("Unclassified warning: %s", e$message),
-            interrupt = function(e) if(interruptable) stop("interrupt", call. = FALSE)
-        )
-    }
+    setDaemonConnection(daemonName, TRUE)
 }
 
 quitDaemon <- function(){
@@ -85,64 +103,77 @@ quitDaemon <- function(){
 }
 
 acceptConnections <- function(){
-    success <- TRUE
-    while(success){
-        success <- tryCatch({
-            con <- 
-                suppressWarnings(
-                    socketAccept(serverData$serverConn, open = "r+", timeout = 1)
-                )
-            request <- waitData(con, timeout = 10)
-            pid <- as.character(request$pid)
-            if(isOneTimeConnection(request)){
-                flog.debug("Receive an one-time request from pid %s", pid)
-                request <- request$data
-                processIndividualRequest(request = request, pid = pid, con = con)
-                close(con)
-                next
-            }
-            if(!isHandshake(request)){
-                close(con)
-                next
-            }
-            
-            oldCon <- serverData$connections[[pid]]
-            if(!is.null(oldCon)){
-                close(oldCon)
-            }
-            serverData$connections[[pid]] <- con
-            TRUE
-        },
-        error = function(e) {
-            FALSE
-        })
+    incomingConnection <- getDaemonConnection(lastRegisteredDaemon())
+    if(!incomingConnection){
+        return()
+    }
+    setDaemonConnection(lastRegisteredDaemon(), FALSE)
+    flog.info("Receive the connection signal, processing")
+    
+    while(TRUE){
+        con <- tryCatch(
+            suppressWarnings(
+                socketAccept(serverData$serverConn, 
+                             open = "r+", 
+                             timeout = 1)
+            ),
+            error = function(e) NULL)
+        if(is.null(con)) break
+        
+        flog.debug("A connection has been created, waiting for the handshake")
+        request <- waitData(con, timeout = 10)
+        pid <- as.character(request$pid)
+        if(isOneTimeConnection(request)){
+            flog.debug("Receive an one-time request from pid %s", pid)
+            request <- request$data
+            processIndividualRequest(request = request, pid = pid, con = con)
+            close(con)
+            next
+        }
+        if(!isHandshake(request)){
+            flog.warn("Handshake failed! Closing the connection")
+            close(con)
+            next
+        }
+        
+        oldCon <- serverData$connections[[pid]]
+        if(!is.null(oldCon)){
+            close(oldCon)
+        }
+        serverData$connections[[pid]] <- con
+        flog.info("A connection from the pid %s is established", pid)
     }
 }
 
 runTasks <- function(){
     taskIds <- names(serverData$tasks)
     for(taskId in taskIds){
+        ## Check whether the task need to be executed
+        taskInterval <- serverData$taskIntervals[[taskId]]
+        if(is.null(taskInterval))
+            taskInterval <- 1L
+        timeout <- isTimeOut(class = "runTask", 
+                             name = taskId, 
+                             timeout = taskInterval)
+        if(!timeout)
+            next
+        
+        ## Run the task
         serverData$currentTaskId <- taskId
-        tryCatch(
-            {
-                eval(
-                    expr = serverData$tasks[[taskId]], 
-                    envir  = serverData$taskData[[taskId]])
-            },
-            error = function(e) 
-                flog.error(
-                    "Error in evaluating the task with the id %s: %s",
-                    taskId, e$message
-                ),
-            warning = function(e)
-                flog.warn(
-                    "Warning in evaluating the task with the id %s: %s",
-                    taskId, e$message
-                )
-        )
+        errorPrefix <- sprintf(
+            "Error in evaluating the task with the id %s", 
+            taskId)
+        warningPrefix <- sprintf(
+            "Warning in evaluating the task with the id %s", 
+            taskId)
+        
+        handleExceptions(
+            eval(expr = serverData$tasks[[taskId]], 
+                 envir  = serverData$taskData[[taskId]]),
+            errorPrefix = errorPrefix,
+            warningPrefix = warningPrefix)
     }
 }
-
 
 processRequest <- function(){
     pids <- names(serverData$connections)
@@ -150,18 +181,16 @@ processRequest <- function(){
         con <- serverData$connections[[pid]]
         requests <- readData(con)
         for(request in requests){
-            tryCatch(
+            errorPrefix <- sprintf(
+                "Error in processing the request from the pid %s", 
+                pid)
+            warningPrefix <- sprintf(
+                "Warning in processing the request from the pid %s", 
+                pid)
+            handleExceptions(
                 processIndividualRequest(request),
-                error = function(e) 
-                    flog.error(
-                        "Error in processing the request from the pid %s: %s",
-                        pid, e$message),
-                warning = function(e)
-                    flog.warn(
-                        "Warning in processing the request from the pid %s: %s",
-                        taskId, e$message
-                    )
-            )
+                errorPrefix = errorPrefix,
+                warningPrefix = warningPrefix)
         }
     }
 }
@@ -180,6 +209,7 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
         return()
     }
     
+    ## TODO:: switch
     if(isEval(request)){
         if(is.null(con)){
             stop("The connection to the pid `",pid,"` does not exist")
@@ -230,22 +260,16 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
         return()
     }
     
-    
     stop("Unknown task type: ", request$type)
 }
 
 
-checkTimeout <- function(){
-    if(length(serverData$tasks)==0){
-        if(is.null(serverData$startTime)){
-            serverData$startTime <- Sys.time()
-        }
-        timeDiff <- difftime(Sys.time(), serverData$startTime, units = "secs")
-        if(timeDiff > serverData$timeout){
-            return(TRUE)
-        }
+isLoopTimeout <- function(){
+    timeout <- isTimeOut("server", "loop", serverData$timeout)
+    if(length(serverData$tasks) == 0){
+        timeout
     }else{
-        serverData$startTime <- NULL
+        resetTimer("server", "loop")
+        FALSE
     }
-    FALSE
 }

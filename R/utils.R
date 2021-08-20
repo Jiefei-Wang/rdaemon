@@ -1,32 +1,43 @@
-#' @export
-interruptProcess <- function(pid){
-    if(Sys.info()[['sysname']]=="Windows"){
-        send_SIGINT(pid)
-    }else{
-        tools::pskill(pid, tools::SIGINT)
-    }
-}
 
-#' @export
-isProcessAlive <- function(pid){
-    tryCatch(
-        if(Sys.info()[['sysname']]=="Windows"){
-            out = system2("wmic",
-                          paste0('process where "ProcessID = ',pid, '" get processid'),
-                          stdout = TRUE)
-            any(grepl(pid, out, fixed = TRUE))
-        }else{
-            system2("ps", c("-p", pid), stdout = NULL, stderr = NULL) == 0L
-        },
-        warning = function(e) TRUE,
-        error = function(e) TRUE
-    )
-}
 
 readTxt <- function(file){
     readChar(file, file.info(file)$size)
 }
 
+.difftime <- function(t1, t2){
+    difftime(t1, t2, units = "secs")
+}
 
+.warning <- function(prefix){
+    function(e){
+        flog.warn(paste0(prefix, ": %s"), conditionMessage(e))
+        tryInvokeRestart("muffleWarning")
+    }
+}
 
+.error <- function(prefix){
+    function(e){
+        flog.error(paste0(prefix, ": %s"), conditionMessage(e))
+    }
+}
+
+.suspendInterruptsIfRequired <- function(expr, interruptable){
+    if(interruptable){
+        expr
+    }else{
+        suspendInterrupts(expr)
+    }
+}
+
+handleExceptions <- function(expr, warningPrefix, errorPrefix){
+    tryCatch(
+        {
+            withCallingHandlers(
+                expr,
+                warning = .warning(warningPrefix)
+            )
+        },
+        error = .error(errorPrefix)
+    )
+}
 

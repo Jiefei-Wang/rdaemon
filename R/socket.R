@@ -44,7 +44,7 @@ readData <- function(con, n = -1){
 waitData <- function(con, timeout = 10){
     startTime <- Sys.time()
     data <- NULL
-    while(difftime(Sys.time(), startTime) < timeout){
+    while(.difftime(Sys.time(), startTime) < timeout){
         data <- readData(con, n = 1)[[1]]
         if(!is.null(data))
             break

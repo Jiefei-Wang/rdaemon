@@ -10,6 +10,7 @@ serverData$connections <- list()
 ## taskData: The data used by the client task
 serverData$tasks <- list()
 serverData$taskData <- list()
+serverData$taskIntervals <- list()
 ## timeout: Time to wait before quit if no task is running
 ## isServer: Whether this is a daemon server
 ## taskPid: The pid corresponds to the currently processed task
@@ -26,6 +27,9 @@ server.setTask <- function(taskId, expr){
 
 server.eval<- function(taskId, expr){
     taskId <- as.character(taskId)
+    if(is.null(serverData$taskData[[taskId]]))
+        serverData$taskData[[taskId]] <- new.env(parent = globalenv())
+    ## TODO: warning
     tryCatch(
         eval(expr = expr, 
              envir  = serverData$taskData[[taskId]]),
@@ -71,3 +75,7 @@ server.response <- function(con, x){
     writeData(con, response)
 }
 
+
+server.setTaskInterval <- function(taskId, interval){
+    serverData$taskIntervals[[as.character(taskId)]] <- interval
+}

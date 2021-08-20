@@ -150,6 +150,7 @@ loadDaemon <- function(daemonName){
     
     if(daemonExists(daemonName)){
         if(!.registered(daemonName)){
+            setDaemonConnection(daemonName, TRUE)
             con <- socketConnection(port = daemonPort, open = "r+")
             handShake <- request.handshake()
             writeData(con, handShake)
