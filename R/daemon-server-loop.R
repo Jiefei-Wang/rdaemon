@@ -33,17 +33,42 @@ runDaemon <- function(daemonName,
 }
 
 daemonLoop <- function(){
+    ## Limit the frequency of the loop
+    waitUntilTimeout(
+        class = "main", 
+        name = "daemon", 
+        timeout = serverData$mainLoopInterval)
+    
     ## Accept new connections
-    acceptConnections()
+    handleExceptions({
+        acceptConnections()
+    },
+    warningPrefix = "Uncached warning in acceptConnections",
+    errorPrefix = "Uncached error in acceptConnections")
+    
     
     ## run the existing tasks
-    runTasks()
+    handleExceptions({
+        runTasks()
+    },
+    warningPrefix = "Uncached warning in runTasks",
+    errorPrefix = "Uncached error in runTasks")
     
     ## process incoming requests
-    processRequest()
+    
+    handleExceptions({
+        processRequest()
+    },
+    warningPrefix = "Uncached warning in processRequest",
+    errorPrefix = "Uncached error in processRequest")
     
     ## Check if the daemon is timeout
-    timeout <- isLoopTimeout()
+    handleExceptions({
+        timeout <- isLoopTimeout()
+    },
+    warningPrefix = "Uncached warning in isLoopTimeout",
+    errorPrefix = "Uncached error in isLoopTimeout")
+    
     if(timeout){
         flog.info("No task is running, quit daemon")
         return(FALSE)
@@ -152,7 +177,7 @@ runTasks <- function(){
         taskInterval <- serverData$taskIntervals[[taskId]]
         if(is.null(taskInterval))
             taskInterval <- 1L
-        timeout <- isTimeOut(class = "runTask", 
+        timeout <- isTimeout(class = "runTask", 
                              name = taskId, 
                              timeout = taskInterval)
         if(!timeout)
@@ -265,7 +290,7 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
 
 
 isLoopTimeout <- function(){
-    timeout <- isTimeOut("server", "loop", serverData$timeout)
+    timeout <- isTimeout("server", "loop", serverData$timeout)
     if(length(serverData$tasks) == 0){
         timeout
     }else{

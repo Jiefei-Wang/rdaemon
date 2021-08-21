@@ -18,6 +18,7 @@ serverData$timeout <- 10*60
 serverData$isServer <- FALSE
 serverData$currentTaskId <- NULL
 serverData$logFile <- NULL
+serverData$mainLoopInterval <- 0.1
 
 
 server.setTask <- function(taskId, expr){
