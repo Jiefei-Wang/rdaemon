@@ -1,9 +1,7 @@
-logFile <- tempfile()
-
 containPattern <- function(pattern, waitTime = 4){
     startTime <- Sys.time()
     while(difftime(Sys.time(), startTime, units = "secs")< 4){
-        logs <- readLines(logFile)
+        logs <- daemonLogs()
         result <- grepl(pattern, logs)
         if(any(result)){
             return(TRUE)
@@ -12,15 +10,11 @@ containPattern <- function(pattern, waitTime = 4){
     FALSE
 }
 
-
 test_that("Run the daemon in the backgroud",{
     daemonName <- "myTestDaemon"
-    registerDaemon(daemonName = daemonName, 
-                   logFile = logFile, 
+    registerDaemon(daemonName = daemonName,
                    threshold = "DEBUG")
-    Sys.sleep(1)
     expect_true(daemonExists(daemonName = daemonName))
-    expect_true(file.exists(logFile))
     expect_true(containPattern("Daemon PID"))
     expect_equal(daemonName, lastRegisteredDaemon())
 })

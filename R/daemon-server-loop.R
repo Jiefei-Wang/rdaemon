@@ -3,7 +3,7 @@ runDaemon <- function(daemonName,
                       interruptable = TRUE, 
                       detach = FALSE, 
                       logFile = NULL,
-                      threshold= c("INFO", "WARN", "ERROR", "DEBUG"),
+                      threshold= c("INFO", "WARN", "ERROR", "DEBUG", "TRACE"),
                       cleanup = TRUE){
     threshold <- match.arg(threshold)
     enableLog(logFile = logFile, threshold = threshold)
@@ -73,7 +73,7 @@ daemonLoop <- function(){
         flog.info("No task is running, quit daemon")
         return(FALSE)
     }
-    flog.debug("Client Number: %d", length(serverData$connections))
+    flog.trace("Client Number: %d", length(serverData$connections))
     TRUE
 }
 
@@ -85,6 +85,8 @@ enableLog <- function(logFile, threshold){
     
     ## log system
     if(!is.null(logFile)&&nzchar(logFile)){
+        if(file.exists(logFile))
+            unlink(logFile)
         con <- file(logFile, open = "wt", blocking = FALSE)
         sink(con, append = FALSE)
         sink(con, append = FALSE, type = "message")
@@ -133,7 +135,7 @@ acceptConnections <- function(){
         return()
     }
     setDaemonConnection(lastRegisteredDaemon(), FALSE)
-    flog.info("Receive the connection signal, processing")
+    flog.debug("Receive the connection signal, processing")
     
     while(TRUE){
         con <- tryCatch(
@@ -279,7 +281,7 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
         for(taskId in as.character(data)){
             serverData$tasks[[taskId]] <- NULL
             serverData$taskData[[taskId]] <- NULL
-            flog.debug("Delete the task %s", taskId)
+            flog.info("Delete the task %s", taskId)
         }
         flog.info("The connection to pid %s has been closed", pid)
         return()

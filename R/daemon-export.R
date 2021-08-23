@@ -21,7 +21,7 @@ daemonTaskId <- function(){
 #' @export
 registerDaemon <- function(daemonName = lastRegisteredDaemon(),
                            logFile = NULL,
-                           threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
+                           threshold = c("INFO", "WARN", "ERROR", "DEBUG", "TRACE")){
     threshold <- match.arg(threshold)
     stopifnot(!serverData$isServer)
     client.registerDaemon(

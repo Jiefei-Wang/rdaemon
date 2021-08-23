@@ -95,6 +95,7 @@ clientData$lastRegisteredDaemon <- paste0("DefaultDaemon", Sys.getpid())
     request <- request.oneTimeConnection(request)
     daemonPort <- getDaemonPort(daemonName)
     daemonPid <- getDaemonPid(daemonName)
+    setDaemonConnection(daemonName, TRUE)
     con <- socketConnection(port = daemonPort, open = "r+")
     response <- .writeToDaemon(con = con, 
                                request = request, 
@@ -170,7 +171,7 @@ loadDaemon <- function(daemonName){
 client.registerDaemon <- 
     function(daemonName = lastRegisteredDaemon(),
              logFile = NULL, 
-             threshold = c("INFO", "WARN", "ERROR", "DEBUG")){
+             threshold = c("INFO", "WARN", "ERROR", "DEBUG", "TRACE")){
         if(!daemonExists(daemonName)){
             rscript <- R.home("bin/Rscript")
             script <- system.file(package="rdaemon", "scripts", "startDaemon.R")
