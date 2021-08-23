@@ -13,10 +13,6 @@ existsGlobalVariable <- function(sharedMemoryName) {
     .Call(`_rdaemon_existsGlobalVariable`, sharedMemoryName)
 }
 
-createGlobalVariable <- function(sharedMemoryName, size) {
-    .Call(`_rdaemon_createGlobalVariable`, sharedMemoryName, size)
-}
-
 setGlobalVariable <- function(sharedMemoryName, value) {
     invisible(.Call(`_rdaemon_setGlobalVariable`, sharedMemoryName, value))
 }
@@ -27,9 +23,5 @@ getGlobalVariable <- function(sharedMemoryName) {
 
 unsetGlobalVariable <- function(sharedMemoryName) {
     invisible(.Call(`_rdaemon_unsetGlobalVariable`, sharedMemoryName))
-}
-
-C_test <- function() {
-    .Call(`_rdaemon_C_test`)
 }
 

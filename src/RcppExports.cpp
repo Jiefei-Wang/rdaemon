@@ -5,6 +5,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // send_SIGINT
 bool send_SIGINT(long long unsigned pid);
 RcppExport SEXP _rdaemon_send_SIGINT(SEXP pidSEXP) {
@@ -33,18 +38,6 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type sharedMemoryName(sharedMemoryNameSEXP);
     rcpp_result_gen = Rcpp::wrap(existsGlobalVariable(sharedMemoryName));
-    return rcpp_result_gen;
-END_RCPP
-}
-// createGlobalVariable
-bool createGlobalVariable(SEXP sharedMemoryName, int size);
-RcppExport SEXP _rdaemon_createGlobalVariable(SEXP sharedMemoryNameSEXP, SEXP sizeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sharedMemoryName(sharedMemoryNameSEXP);
-    Rcpp::traits::input_parameter< int >::type size(sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(createGlobalVariable(sharedMemoryName, size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -80,26 +73,14 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// C_test
-int C_test();
-RcppExport SEXP _rdaemon_C_test() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(C_test());
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rdaemon_send_SIGINT", (DL_FUNC) &_rdaemon_send_SIGINT, 1},
     {"_rdaemon_detachConsole", (DL_FUNC) &_rdaemon_detachConsole, 0},
     {"_rdaemon_existsGlobalVariable", (DL_FUNC) &_rdaemon_existsGlobalVariable, 1},
-    {"_rdaemon_createGlobalVariable", (DL_FUNC) &_rdaemon_createGlobalVariable, 2},
     {"_rdaemon_setGlobalVariable", (DL_FUNC) &_rdaemon_setGlobalVariable, 2},
     {"_rdaemon_getGlobalVariable", (DL_FUNC) &_rdaemon_getGlobalVariable, 1},
     {"_rdaemon_unsetGlobalVariable", (DL_FUNC) &_rdaemon_unsetGlobalVariable, 1},
-    {"_rdaemon_C_test", (DL_FUNC) &_rdaemon_C_test, 0},
     {NULL, NULL, 0}
 };
 

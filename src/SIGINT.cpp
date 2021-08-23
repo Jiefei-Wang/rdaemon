@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #include <windows.h>
 
 // From https://stackoverflow.com/questions/813086/can-i-send-a-ctrl-c-sigint-to-an-application-on-windows
@@ -36,3 +37,8 @@ bool send_SIGINT(long long unsigned pid)
     }
     return success;
 }
+#else
+bool send_SIGINT(long long unsigned pid){
+    return true;
+}
+#endif

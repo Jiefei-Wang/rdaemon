@@ -10,6 +10,6 @@ void detachConsole()
 #ifdef _WIN32
     FreeConsole();
 #else
-    int sid = setsid();
+    //int sid = setsid();
 #endif
 }

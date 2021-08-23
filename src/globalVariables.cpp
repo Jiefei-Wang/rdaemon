@@ -2,24 +2,28 @@
 #include <map>
 #include <Rinternals.h>
 
-#define DATA_TYPE int
-
 #ifdef _WIN32
 #include <windows.h>
 #define PKG_SPACE "Local\\rdaemon_"
 #else
-#define PKG_SPACE "rdaemon_"
+#include <sys/mman.h>
+#include <sys/stat.h>        /* For mode constants */
+#include <fcntl.h>           /* For O_* constants */
+#include <unistd.h>          /* For close file descriptor */
+#include <errno.h>
+#include <string.h>
+#define PKG_SPACE "/rdaemon_"
 #endif
 
-std::map<std::string, HANDLE> handleMap;
-std::map<std::string, DATA_TYPE *> mappedMemoryMap;
 
-
-#ifdef _WIN32
 std::string getName(std::string name)
 {
     return PKG_SPACE + name;
 }
+
+#ifdef _WIN32
+std::map<std::string, HANDLE> handleMap;
+std::map<std::string, int *> mappedMemoryMap;
 
 // [[Rcpp::export]]
 bool existsGlobalVariable(SEXP sharedMemoryName)
@@ -38,11 +42,10 @@ bool existsGlobalVariable(SEXP sharedMemoryName)
     return exist;
 }
 
-// [[Rcpp::export]]
 bool createGlobalVariable(SEXP sharedMemoryName, int size)
 {
     HANDLE hMapFile;
-    DATA_TYPE *pBuf;
+    int *pBuf;
     std::string name;
 
     name = getName(CHAR(asChar(sharedMemoryName)));
@@ -63,7 +66,7 @@ bool createGlobalVariable(SEXP sharedMemoryName, int size)
     {
         return false;
     }
-    pBuf = (DATA_TYPE *)MapViewOfFile(hMapFile,            // handle to map object
+    pBuf = (int *)MapViewOfFile(hMapFile,            // handle to map object
                                       FILE_MAP_ALL_ACCESS, // read/write permission
                                       0,
                                       0,
@@ -86,9 +89,9 @@ void setGlobalVariable(SEXP sharedMemoryName, int value)
     std::string name = getName(CHAR(asChar(sharedMemoryName)));
     if (handleMap.find(name) == handleMap.end())
     {
-        createGlobalVariable(sharedMemoryName, sizeof(DATA_TYPE));
+        createGlobalVariable(sharedMemoryName, sizeof(int));
     }
-    DATA_TYPE *ptr = mappedMemoryMap.at(name);
+    int *ptr = mappedMemoryMap.at(name);
     *ptr = value;
 }
 
@@ -101,7 +104,7 @@ int getGlobalVariable(SEXP sharedMemoryName)
         if(!existsGlobalVariable(sharedMemoryName))
             return NA_INTEGER;
         else
-            createGlobalVariable(sharedMemoryName, sizeof(DATA_TYPE));
+            createGlobalVariable(sharedMemoryName, sizeof(int));
     }
     return *mappedMemoryMap.at(name);
 }
@@ -118,9 +121,56 @@ void unsetGlobalVariable(SEXP sharedMemoryName)
 }
 
 
-// [[Rcpp::export]]
-int C_test(){
-    return NA_INTEGER;
+#else
+bool existsGlobalVariable(SEXP sharedMemoryName)
+{
+    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
+
+    bool exist = (fd != -1);
+    if(exist)
+        close(fd);
+    return exist;
+}
+
+void setGlobalVariable(SEXP sharedMemoryName, int value)
+{
+    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    int fd = shm_open(name.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
+    if(fd == -1){
+        Rf_error("Fail to open the shared memory file! Error: %s", strerror(errno));
+    }
+    ftruncate(fd, sizeof(int));
+    int *ptr = (int *)mmap(NULL, sizeof(int),
+                                          PROT_READ|PROT_WRITE,
+                                          MAP_SHARED, fd, 0);
+    if(ptr == (void*) -1){
+        Rf_error("Fail to perform the memory mapping!! Error: %s", strerror(errno));
+    }
+    *ptr = value;
+}
+
+int getGlobalVariable(SEXP sharedMemoryName)
+{
+    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
+    if(fd == -1){
+        return NA_INTEGER;
+    }
+    int *ptr = (int *)mmap(NULL, sizeof(int),
+                                          PROT_READ,
+                                          MAP_SHARED, fd, 0);
+    if(ptr != (void*) -1){
+        return *ptr;
+    }else{
+        return NA_INTEGER;
+    }
+}
+
+void unsetGlobalVariable(SEXP sharedMemoryName)
+{
+    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    shm_unlink(name.c_str());
 }
 
 #endif
