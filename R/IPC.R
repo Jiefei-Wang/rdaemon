@@ -19,7 +19,11 @@ getDaemonPid <- function(name){
 }
 
 getDaemonConnection <- function(name){
-    as.logical(getGlobalVariable(daemonConnectionName(name)))
+    con <- getGlobalVariable(daemonConnectionName(name))
+    if(is.na(con))
+        FALSE
+    else
+        as.logical(con)
 }
 
 setDaemonPort <- function(name, port){
