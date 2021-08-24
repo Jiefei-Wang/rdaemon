@@ -62,6 +62,13 @@ daemonLoop <- function(){
     warningPrefix = "Uncached warning in processRequest",
     errorPrefix = "Uncached error in processRequest")
     
+    ## Truncate the log if needed
+    handleExceptions({
+        truncateLog()
+    },
+    warningPrefix = "Uncached warning in truncateLog",
+    errorPrefix = "Uncached error in truncateLog")
+    
     ## Check if the daemon is timeout
     handleExceptions({
         timeout <- isLoopTimeout()
@@ -78,19 +85,29 @@ daemonLoop <- function(){
 }
 
 
-
-
-enableLog <- function(logFile, threshold){
-    futile.logger::flog.threshold(get(threshold))
-    
-    ## log system
+enableSink <- function(){
+    logFile <- serverData$logFile
     if(!is.null(logFile)&&nzchar(logFile)){
         if(file.exists(logFile))
             unlink(logFile)
         con <- file(logFile, open = "wt", blocking = FALSE)
         sink(con, append = FALSE)
         sink(con, append = FALSE, type = "message")
+    }
+}
+
+disableSink <- function(){
+    sink(type = "message")
+    sink()
+}
+
+enableLog <- function(logFile, threshold){
+    futile.logger::flog.threshold(get(threshold))
+    
+    ## sink the output
+    if(!is.null(logFile)&&nzchar(logFile)){
         serverData$logFile <- logFile
+        enableSink()
     }
     flog.info("Daemon PID: %d", Sys.getpid())
 }
@@ -98,6 +115,28 @@ enableLog <- function(logFile, threshold){
 disableLog <- function(){
     sink(con, append = FALSE)
     sink(con, append = FALSE, type = "message")
+}
+
+truncateLog <- function(){
+    timeout <- isTimeout("truncate", "log", serverData$logTruncationInterval)
+    if(!timeout)
+        return()
+    logFile <- serverData$logFile
+    if(is.null(logFile)||!nzchar(logFile))
+        return()
+    if(!file.exists(logFile))
+        return()
+    
+    logs <- readLines(con = logFile)
+    n <- serverData$logMaxLineNum
+    ## We do not want to do this every time
+    ## so just make it tolerate more lines
+    if(length(logs) > n * 2){
+        disableSink()
+        logs <- paste0(paste0(tail(logs, n = n), collapse = "\n"), "\n")
+        enableSink()
+        cat(logs)
+    }
 }
 
 startServerConnection <- function(daemonName){
