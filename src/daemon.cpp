@@ -26,11 +26,3 @@ void detachConsole()
     }  
 #endif
 }
-
-// [[Rcpp::export]]
-void setProcessName(std::string name){
-#ifdef _WIN32
-#else
-    prctl(PR_SET_NAME, (unsigned long)"test", 0, 0, 0);
-#endif
-}

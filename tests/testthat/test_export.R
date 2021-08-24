@@ -19,7 +19,6 @@ test_that("Run the daemon in the backgroud",{
     expect_equal(daemonName, lastRegisteredDaemon())
 })
 
-
 test_that("daemon export and set task",{
     daemonExport(i = 10)
     daemonSetTask(message("The value of i is ", i))
@@ -30,7 +29,6 @@ test_that("daemon eval",{
     daemonEval({i <- 11})
     expect_true(containPattern("The value of i is 11"))
 })
-
 
 test_that("daemon copy",{
     daemonCopyTask(sourceId = daemonTaskId(), targetId = 100)
@@ -68,6 +66,7 @@ test_that("daemon one-time request",{
 
 test_that("daemon kill",{
     killDaemon()
+    Sys.sleep(0.5)
     expect_false(daemonExists(daemonName = "myTestDaemon"))
 })
 
