@@ -74,6 +74,7 @@ test_that("Client delete task",{
 
 
 test_that("Client close connection",{
+    futile.logger::flog.threshold(WARN)
     taskId <- Sys.getpid()
     serverData$connections[[as.character(taskId)]] <- file(tempfile(), open= 'w+')
     request <- request.close(taskId)
