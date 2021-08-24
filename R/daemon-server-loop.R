@@ -91,8 +91,8 @@ enableLog <- function(logFile, threshold){
         sink(con, append = FALSE)
         sink(con, append = FALSE, type = "message")
         serverData$logFile <- logFile
-        flog.info("Daemon PID: %d", Sys.getpid())
     }
+    flog.info("Daemon PID: %d", Sys.getpid())
 }
 
 disableLog <- function(){
@@ -101,6 +101,14 @@ disableLog <- function(){
 }
 
 startServerConnection <- function(daemonName){
+    ## Check if the daemon already exists
+    
+    if(daemonExists(daemonName)){
+        if(getDaemonPid(daemonName) != Sys.getpid()){
+            flog.error("The daemon '%s' already exists!", daemonName)
+            stop(call. = FALSE)
+        }
+    }
     ## Try to start the daemon server
     serverData$port <- findPort()
     ## Run and check if this daemon gets the permission to continue
@@ -154,7 +162,8 @@ acceptConnections <- function(){
             flog.debug("Receive an one-time request from pid %s", pid)
             request <- request$data
             processIndividualRequest(request = request, pid = pid, con = con)
-            close(con)
+            if(!isClose(con))
+                close(con)
             next
         }
         if(!isHandshake(request)){
