@@ -120,7 +120,6 @@ void unsetGlobalVariable(SEXP sharedMemoryName)
     }
 }
 
-
 #else
 bool existsGlobalVariable(SEXP sharedMemoryName)
 {
@@ -136,32 +135,44 @@ bool existsGlobalVariable(SEXP sharedMemoryName)
 void setGlobalVariable(SEXP sharedMemoryName, int value)
 {
     std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    size_t size = sizeof(int);
     int fd = shm_open(name.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
     if(fd == -1){
-        Rf_error("Fail to open the shared memory file! Error: %s", strerror(errno));
+        Rf_error("Fail to create the shared memory file! Error: %s", strerror(errno));
     }
-    ftruncate(fd, sizeof(int));
-    int *ptr = (int *)mmap(NULL, sizeof(int),
+    int success = ftruncate(fd, size);
+    if(success == -1){
+        close(fd);
+        Rf_error("Fail to truncate the shared memory file! Error: %s", strerror(errno));
+    }
+    int *ptr = (int *)mmap(NULL, size,
                                           PROT_READ|PROT_WRITE,
                                           MAP_SHARED, fd, 0);
+    close(fd);
     if(ptr == (void*) -1){
         Rf_error("Fail to perform the memory mapping!! Error: %s", strerror(errno));
     }
     *ptr = value;
+    munmap(ptr, size);
 }
 
 int getGlobalVariable(SEXP sharedMemoryName)
 {
     std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    size_t size = sizeof(int);
     int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
     if(fd == -1){
         return NA_INTEGER;
     }
-    int *ptr = (int *)mmap(NULL, sizeof(int),
+    int *ptr = (int *)mmap(NULL, size,
                                           PROT_READ,
                                           MAP_SHARED, fd, 0);
+    
+    close(fd);
     if(ptr != (void*) -1){
-        return *ptr;
+        int value = *ptr;
+        munmap(ptr, size);
+        return value;
     }else{
         return NA_INTEGER;
     }
