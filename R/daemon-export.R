@@ -253,14 +253,16 @@ daemonSetTask <- function(expr = NULL,
 daemonSetTaskScript <- function(script, 
                                 daemonName = lastRegisteredDaemon(), 
                                 taskId = lastSetTaskId(),
-                                interval = 1){
+                                interval = 1,
+                                exports = list()){
     checkDaemonArgs(daemonName = daemonName, taskId = taskId)
     stopifnot(!serverData$isServer)
     script <- readChar(script, file.info(script)$size)
     daemonSetTask(daemonName = daemonName, 
                   taskId = taskId, 
                   expr.char = script,
-                  interval = interval)
+                  interval = interval,
+                  exports = exports)
 }
 
 

@@ -27,6 +27,7 @@ test_that("daemon export and set task",{
 
 test_that("daemon eval",{
     daemonEval({i <- 11})
+    expect_equal(daemonEval(i), 11)
     expect_true(containPattern("The value of i is 11"))
 })
 
@@ -41,8 +42,10 @@ test_that("daemon copy",{
 test_that("daemon task script",{
     script <- tempfile()
     cat("message('test script')", file = script)
-    daemonSetTaskScript(script)
+    exports <- list(a = 1)
+    daemonSetTaskScript(script, exports = exports)
     expect_true(containPattern("test script"))
+    expect_equal(daemonEval(a), exports$a)
 })
 
 test_that("daemon get task",{

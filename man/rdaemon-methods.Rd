@@ -40,14 +40,16 @@ daemonSetTask(
   daemonName = lastRegisteredDaemon(),
   taskId = lastSetTaskId(),
   expr.char = NULL,
-  interval = 1
+  interval = 1L,
+  exports = list()
 )
 
 daemonSetTaskScript(
   script,
   daemonName = lastRegisteredDaemon(),
   taskId = lastSetTaskId(),
-  interval = 1
+  interval = 1,
+  exports = list()
 )
 
 daemonSetTaskInterval(
@@ -106,6 +108,9 @@ is never called, the default task ID will be provided.}
 
 \item{interval}{numeric(1), the time to wait in seconds between 
 two executions of the same task.}
+
+\item{exports}{list, the variables that will be exported to the task
+environment.}
 
 \item{script}{character(1), the path to the script.}
 
