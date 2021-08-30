@@ -68,6 +68,17 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// isProcessRunning
+bool isProcessRunning(long long unsigned pid);
+RcppExport SEXP _rdaemon_isProcessRunning(SEXP pidSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< long long unsigned >::type pid(pidSEXP);
+    rcpp_result_gen = Rcpp::wrap(isProcessRunning(pid));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rdaemon_send_SIGINT", (DL_FUNC) &_rdaemon_send_SIGINT, 1},
@@ -76,6 +87,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rdaemon_setGlobalVariable", (DL_FUNC) &_rdaemon_setGlobalVariable, 2},
     {"_rdaemon_getGlobalVariable", (DL_FUNC) &_rdaemon_getGlobalVariable, 1},
     {"_rdaemon_unsetGlobalVariable", (DL_FUNC) &_rdaemon_unsetGlobalVariable, 1},
+    {"_rdaemon_isProcessRunning", (DL_FUNC) &_rdaemon_isProcessRunning, 1},
     {NULL, NULL, 0}
 };
 

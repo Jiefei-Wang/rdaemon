@@ -25,3 +25,7 @@ unsetGlobalVariable <- function(sharedMemoryName) {
     invisible(.Call(`_rdaemon_unsetGlobalVariable`, sharedMemoryName))
 }
 
+isProcessRunning <- function(pid) {
+    .Call(`_rdaemon_isProcessRunning`, pid)
+}
+
