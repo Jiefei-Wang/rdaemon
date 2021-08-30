@@ -108,6 +108,7 @@ registerDaemon <- function(daemonName = lastRegisteredDaemon(),
                            logFile = NULL,
                            threshold = c("INFO", "WARN", "ERROR", "DEBUG", "TRACE")){
     threshold <- match.arg(threshold)
+    checkDaemonArgs(daemonName = daemonName)
     stopifnot(!serverData$isServer)
     client.registerDaemon(
         daemonName = daemonName, 
@@ -131,6 +132,7 @@ registerDaemon <- function(daemonName = lastRegisteredDaemon(),
 deregisterDaemon <- function(
     daemonName = lastRegisteredDaemon(), 
     deleteTask = TRUE){
+    checkDaemonArgs(daemonName = daemonName)
     stopifnot(!serverData$isServer)
     client.deregisterDaemon(daemonName = daemonName, 
                             deleteTask = deleteTask)
@@ -145,6 +147,7 @@ deregisterDaemon <- function(
 #' @rdname rdaemon-methods
 #' @export
 killDaemon <- function(daemonName = lastRegisteredDaemon()){
+    checkDaemonArgs(daemonName = daemonName)
     if(serverData$isServer && identical(serverData$daemonName, daemonName)){
         quit(save = "no")
     }else{
@@ -161,6 +164,7 @@ killDaemon <- function(daemonName = lastRegisteredDaemon()){
 #' @rdname rdaemon-methods
 #' @export
 daemonExists <- function(daemonName = lastRegisteredDaemon()){
+    checkDaemonArgs(daemonName = daemonName)
     if(serverData$isServer && identical(serverData$daemonName, daemonName))
         return(TRUE)
     
@@ -183,6 +187,8 @@ daemonExists <- function(daemonName = lastRegisteredDaemon()){
 #' @param expr.char character(1), An R expression in the character format.
 #' @param interval numeric(1), the time to wait in seconds between 
 #' two executions of the same task.
+#' @param exports list, the variables that will be exported to the task
+#' environment.
 #' 
 #' @details 
 #' `daemonSetTask`: set the task expression that 
@@ -196,7 +202,14 @@ daemonSetTask <- function(expr = NULL,
                           daemonName = lastRegisteredDaemon(),
                           taskId = lastSetTaskId(),
                           expr.char = NULL,
-                          interval = 1){
+                          interval = 1L,
+                          exports = list()){
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
+    if(length(exports)>0){
+        stopifnot(length(names(exports))>0)
+        stopifnot(all(nzchar(names(exports))))
+    }
+    
     stopifnot(xor(missing(expr), missing(expr.char)))
     if(missing(expr.char)){
         expr <- substitute(expr)
@@ -207,15 +220,17 @@ daemonSetTask <- function(expr = NULL,
     
     if(serverData$isServer){
         stopifnot(identical(serverData$daemonName, daemonName))
-        server.setTask(expr = expr, taskId = taskId)
+        server.setTask(expr = expr, 
+                       taskId = taskId, 
+                       exports = exports,
+                       interval = interval)
     }else{
         client.setTask(daemonName = daemonName, 
                        taskId = taskId,
-                       expr = expr)
+                       expr = expr,
+                       exports = exports,
+                       interval = interval)
     }
-    daemonSetTaskInterval(interval = interval, 
-                          daemonName = daemonName, 
-                          taskId = taskId)
     invisible()
 }
 
@@ -239,6 +254,7 @@ daemonSetTaskScript <- function(script,
                                 daemonName = lastRegisteredDaemon(), 
                                 taskId = lastSetTaskId(),
                                 interval = 1){
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
     stopifnot(!serverData$isServer)
     script <- readChar(script, file.info(script)$size)
     daemonSetTask(daemonName = daemonName, 
@@ -261,8 +277,9 @@ daemonSetTaskScript <- function(script,
 #' @rdname rdaemon-methods
 #' @export
 daemonSetTaskInterval <- function(interval, 
-                                daemonName = lastRegisteredDaemon(), 
-                                taskId = lastSetTaskId()){
+                                  daemonName = lastRegisteredDaemon(), 
+                                  taskId = lastSetTaskId()){
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
     expr <- paste0("rdaemon:::server.setTaskInterval('",taskId,"',", interval,")")
     daemonEval(expr.char = expr, daemonName = daemonName, taskId = taskId)
     invisible()
@@ -277,8 +294,9 @@ daemonSetTaskInterval <- function(interval,
 #' @rdname rdaemon-methods 
 #' @export
 daemonGetTaskInterval <- function(interval, 
-                                daemonName = lastRegisteredDaemon(), 
-                                taskId = lastSetTaskId()){
+                                  daemonName = lastRegisteredDaemon(), 
+                                  taskId = lastSetTaskId()){
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
     expr <- paste0("rdaemon:::serverData$taskIntervals[['",taskId,"']]")
     daemonEval(expr.char = expr, daemonName = daemonName, taskId = taskId)
 }
@@ -294,7 +312,8 @@ daemonEval <- function(expr,
                        daemonName = lastRegisteredDaemon(), 
                        taskId = lastSetTaskId(),
                        expr.char = NULL){
-     stopifnot(xor(missing(expr), missing(expr.char)))
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
+    stopifnot(xor(missing(expr), missing(expr.char)))
     if(missing(expr.char)){
         expr <- substitute(expr)
     }else{
@@ -326,6 +345,7 @@ daemonEval <- function(expr,
 #' @export
 daemonGetTask <- function(daemonName = lastRegisteredDaemon(), 
                           taskId = lastSetTaskId()){
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
     if(serverData$isServer){
         stopifnot(identical(serverData$daemonName, daemonName))
         server.getTask(taskId = taskId)
@@ -346,6 +366,7 @@ daemonGetTask <- function(daemonName = lastRegisteredDaemon(),
 daemonExport <- function(..., 
                          daemonName = lastRegisteredDaemon(), 
                          taskId = lastSetTaskId()){
+    checkDaemonArgs(daemonName = daemonName, taskId = taskId)
     objects <- list(...)
     stopifnot(length(names(objects))>0)
     stopifnot(all(nzchar(names(objects))))
@@ -369,6 +390,7 @@ daemonExport <- function(...,
 #' @rdname rdaemon-methods 
 #' @export
 daemonLogs <- function(daemonName = lastRegisteredDaemon()){
+    checkDaemonArgs(daemonName = daemonName)
     logPath <- daemonEval(daemonName = daemonName, 
                           expr = rdaemon:::serverData$logFile)
     if(is.null(logPath))
@@ -392,6 +414,10 @@ daemonLogs <- function(daemonName = lastRegisteredDaemon()){
 daemonCopyTask <- function(sourceId, 
                            targetId = lastSetTaskId(), 
                            daemonName = lastRegisteredDaemon()){
+    checkDaemonArgs(daemonName = daemonName)
+    stopifnot(isScalerChar(sourceId))
+    stopifnot(isScalerChar(targetId))
+    
     if(serverData$isServer){
         stopifnot(identical(serverData$daemonName, daemonName))
         server.copyTask(sourceId = sourceId, targetId = targetId)

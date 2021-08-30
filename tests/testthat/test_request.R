@@ -1,10 +1,17 @@
 ## Client
 test_that("Client set task",{
-    taskId <- Sys.getpid()
+    taskId <- as.character(Sys.getpid())
     expr <- expression(5)
-    request <- request.setTask(taskId, expr)
+    exports <- list(a = 1)
+    interval <- 10
+    request <- request.setTask(taskId, 
+                               expr = expr,
+                               exports = exports,
+                               interval = interval)
     processIndividualRequest(request)
-    expect_equal(serverData$tasks[[as.character(taskId)]], expr)
+    expect_equal(serverData$tasks[[taskId]], expr)
+    expect_equal(serverData$taskData[[taskId]]$a, exports$a)
+    expect_equal(serverData$taskIntervals[[taskId]], interval)
 }
 )
 
@@ -88,10 +95,17 @@ test_that("Client close connection",{
 
 ## server
 test_that("Server set task",{
-    taskId <- Sys.getpid()
+    taskId <- as.character(Sys.getpid())
     expr <- expression(5)
-    server.setTask(taskId = taskId, expr = expr)
-    expect_equal(serverData$tasks[[as.character(taskId)]], expr)
+    exports <- list(a = 2)
+    interval <- 5
+    server.setTask(taskId, 
+                   expr = expr,
+                   exports = exports,
+                   interval = interval)
+    expect_equal(serverData$tasks[[taskId]], expr)
+    expect_equal(serverData$taskData[[taskId]]$a, exports$a)
+    expect_equal(serverData$taskIntervals[[taskId]], interval)
 }
 )
 

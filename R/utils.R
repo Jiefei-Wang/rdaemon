@@ -41,3 +41,16 @@ handleExceptions <- function(expr, warningPrefix, errorPrefix){
     )
 }
 
+isScalerChar <- function(x){
+    length(x) == 1 && is.character(x)
+}
+
+checkDaemonArgs <- function(daemonName = NULL, taskId = NULL){
+    if(!is.null(daemonName)){
+        stopifnot(isScalerChar(daemonName))
+    }
+    if(!is.null(taskId)){
+        stopifnot(isScalerChar(taskId))
+    }
+}
+

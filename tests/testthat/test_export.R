@@ -31,9 +31,9 @@ test_that("daemon eval",{
 })
 
 test_that("daemon copy",{
-    daemonCopyTask(sourceId = lastSetTaskId(), targetId = 100)
+    daemonCopyTask(sourceId = lastSetTaskId(), targetId = "100")
     daemonEval({i <- 12})
-    daemonEval({i <- 13}, taskId = 100)
+    daemonEval({i <- 13}, taskId = "100")
     expect_true(containPattern("The value of i is 12"))
     expect_true(containPattern("The value of i is 13"))
 })
@@ -59,7 +59,7 @@ test_that("daemon deregister",{
 })
 
 test_that("daemon one-time request",{
-    response <- daemonEval(i, taskId = 100)
+    response <- daemonEval(i, taskId = "100")
     expect_equal(response, 13)
     expect_false(.registered(lastRegisteredDaemon()))
 })

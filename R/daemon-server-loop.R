@@ -271,7 +271,7 @@ processRequest <- function(){
 }
 
 processIndividualRequest <- function(request, pid = NULL, con = NULL){
-    taskId <- as.character(request$taskId)
+    taskId <- request$taskId
     data <- request$data
     if(is.null(pid))
         pid <- request$pid
@@ -280,7 +280,12 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
         con <- serverData$connections[[pid]]
     
     if(isSetTaskRequest(request)){
-        server.setTask(expr = data, taskId = taskId)
+        exports <- request$exports
+        interval <- request$interval
+        server.setTask(expr = data, 
+                       taskId = taskId,
+                       exports = exports,
+                       interval = interval)
         return()
     }
     

@@ -1,8 +1,13 @@
-request.setTask <- function(taskId, expr){
+request.setTask <- function(taskId, 
+                            expr,
+                            exports,
+                            interval){
     list(
         taskId = taskId,
         type = "setTask",
-        data = expr
+        data = expr,
+        exports = exports,
+        interval = interval
     )
 }
 
@@ -76,7 +81,7 @@ isSetTaskRequest <- function(msg){
 }
 
 isEval <- function(msg){
-   msg$type == "eval"
+    msg$type == "eval"
 }
 
 isGetTaskRequest <- function(msg){

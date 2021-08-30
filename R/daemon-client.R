@@ -231,8 +231,13 @@ client.killDaemon <- function(daemonName = lastRegisteredDaemon()){
 client.setTask <- 
     function(daemonName = lastRegisteredDaemon(), 
              taskId = lastSetTaskId(), 
-             expr = NULL){
-        request <- request.setTask(taskId = taskId, expr = expr)
+             expr = NULL,
+             exports,
+             interval){
+        request <- request.setTask(taskId = taskId, 
+                                   expr = expr,
+                                   exports = exports,
+                                   interval = interval)
         
         .sendRequest(daemonName = daemonName, 
                      request = request,

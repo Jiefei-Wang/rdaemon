@@ -14,7 +14,7 @@ serverData$taskIntervals <- list()
 ## timeout: Time to wait before quit if no task is running
 ## isServer: Whether this is a daemon server
 ## taskPid: The pid corresponds to the currently processed task
-serverData$timeout <- 10*60
+serverData$timeout <- 1*60
 serverData$isServer <- FALSE
 serverData$currentTaskId <- NULL
 serverData$logFile <- NULL
@@ -23,9 +23,14 @@ serverData$logMaxLineNum <- 10000
 serverData$mainLoopInterval <- 0.1
 
 
-server.setTask <- function(taskId, expr){
+server.setTask <- function(taskId, 
+                           expr,
+                           exports,
+                           interval){
     taskId <- as.character(taskId)
     serverData$tasks[[taskId]] <- expr
+    server.export(taskId = taskId, objects = exports)
+    server.setTaskInterval(taskId = taskId, interval = interval)
 }
 
 server.eval<- function(taskId, expr){
