@@ -228,13 +228,16 @@ lastRegisteredDaemon()
 lastSetTaskId()
 
 ## Register a daemon using the default daemon name
-registerDaemon()
+myfile <- tempfile()
+registerDaemon(logFile = myfile, threshold = "TRACE")
+Sys.sleep(2)
+readLines(myfile)
 
 ## Check if the daemon is running
 daemonExists()
 
 ## Set a task run by the daemon
-daemonSetTask(message("Hello from daemon"))
+#daemonSetTask(message("Hello from daemon"))
 
 ## See the daemon log for the output
 Sys.sleep(1)
