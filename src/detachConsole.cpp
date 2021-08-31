@@ -16,11 +16,7 @@ void detachConsole()
     FreeConsole();
 #else
      if ( getppid() == 1 ) {
-<<<<<<< HEAD
          Rprintf("The current process is the group leader!");
-=======
-         Rprintf("The current process is the group leader!")
->>>>>>> 33d1528ab4bb53b63343af3d36a862627cff6cc9
          return;
          //Rf_error("Cannot detach group leader!");
      }
