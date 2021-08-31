@@ -10,7 +10,7 @@ clientData$daemonPids <- list()
 clientData$daemonTasks <- list()
 clientData$lastRegisteredDaemon <- paste0("DefaultDaemon_", Sys.getpid())
 clientData$lastSetTaskId <- paste0("DefaultTask_", Sys.getpid())
-
+clientData$waitTimeout <- 2*60
 
 ## accessors
 .connection <- function(daemonName){
@@ -87,7 +87,7 @@ clientData$lastSetTaskId <- paste0("DefaultTask_", Sys.getpid())
 
 .writeToDaemon <- function(con, request, 
                            waitResponse = FALSE, 
-                           timeout = 60*60*24*30){
+                           timeout = clientData$waitTimeout){
     flushData(con)
     writeData(con, request)
     if(waitResponse)
@@ -99,7 +99,7 @@ clientData$lastSetTaskId <- paste0("DefaultTask_", Sys.getpid())
 .writeOneTimeRequest <- function(daemonName, 
                                  request, 
                                  waitResponse = FALSE, 
-                                 timeout = 60*60*24*30){
+                                 timeout = clientData$waitTimeout){
     request <- request.oneTimeConnection(request)
     daemonPort <- getDaemonPort(daemonName)
     daemonPid <- getDaemonPid(daemonName)
@@ -115,7 +115,7 @@ clientData$lastSetTaskId <- paste0("DefaultTask_", Sys.getpid())
 
 .sendRequest <- function(daemonName, request, 
                          waitResponse = FALSE, 
-                         timeout = 60*60*24*30){
+                         timeout = clientData$waitTimeout){
     if(!daemonExists(daemonName))
         stop("The daemon '",daemonName,"' does not exist!")
     
