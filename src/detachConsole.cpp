@@ -16,7 +16,9 @@ void detachConsole()
     FreeConsole();
 #else
      if ( getppid() == 1 ) {
-         Rf_error("Cannot detach group leader!");
+         Rprintf("The current process is the group leader!");
+         return;
+         //Rf_error("Cannot detach group leader!");
      }
     int sid = setsid();  
     if (sid < 0)    

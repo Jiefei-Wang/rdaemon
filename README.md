@@ -8,7 +8,7 @@ The daemon organizes user's code using the task. A task is combination of the R 
 ![](vignettes/daemon_structure.jpg)
 Note that when multiple tasks are in the same daemon, the daemon will run them sequentially. Therefore, it is recommended to keep each task relatively simple if many tasks exist in the same daemon. Otherwise a long-running task might block the execution of the other tasks.
 
-`rdaemon` supports many daemon structure, below are the common use cases.
+`rdaemon` supports many programming models, below are the common use cases.
 
 ![](vignettes/framework.jpg)
 
@@ -158,25 +158,25 @@ sessionInfo()
 #> [7] base     
 #> 
 #> other attached packages:
-#> [1] readr_1.4.0    rdaemon_0.0.99 testthat_3.0.2
+#> [1] rdaemon_1.0.0  testthat_3.0.2
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Rcpp_1.0.6           compiler_4.1.0       pillar_1.6.1        
-#>  [4] formatR_1.11         futile.logger_1.4.3  prettyunits_1.1.1   
-#>  [7] futile.options_1.0.1 base64enc_0.1-3      remotes_2.4.0       
+#>  [1] Rcpp_1.0.6           formatR_1.11         futile.logger_1.4.3 
+#>  [4] pillar_1.6.1         compiler_4.1.0       base64enc_0.1-3     
+#>  [7] futile.options_1.0.1 prettyunits_1.1.1    remotes_2.4.0       
 #> [10] tools_4.1.0          digest_0.6.27        pkgbuild_1.2.0      
 #> [13] pkgload_1.2.1        evaluate_0.14        memoise_2.0.0       
 #> [16] lifecycle_1.0.0      tibble_3.1.2         pkgconfig_2.0.3     
 #> [19] rlang_0.4.11         cli_2.5.0            rstudioapi_0.13     
-#> [22] diffobj_0.3.4        yaml_2.2.1           xfun_0.23           
-#> [25] fastmap_1.1.0        stringr_1.4.0        knitr_1.33          
-#> [28] withr_2.4.2          hms_1.1.0            desc_1.3.0          
+#> [22] yaml_2.2.1           xfun_0.23            fastmap_1.1.0       
+#> [25] withr_2.4.2          stringr_1.4.0        roxygen2_7.1.1      
+#> [28] knitr_1.33           xml2_1.3.2           desc_1.3.0          
 #> [31] fs_1.5.0             vctrs_0.3.8          devtools_2.4.1      
 #> [34] rprojroot_2.0.2      glue_1.4.2           R6_2.5.0            
 #> [37] processx_3.5.2       fansi_0.5.0          rmarkdown_2.8       
-#> [40] waldo_0.2.5          sessioninfo_1.1.1    rematch2_2.1.2      
-#> [43] callr_3.7.0          purrr_0.3.4          lambda.r_1.2.4      
-#> [46] magrittr_2.0.1       htmltools_0.5.1.1    ps_1.6.0            
-#> [49] ellipsis_0.3.2       usethis_2.0.1        utf8_1.2.1          
-#> [52] stringi_1.6.2        cachem_1.0.5         crayon_1.4.1
+#> [40] sessioninfo_1.1.1    lambda.r_1.2.4       callr_3.7.0         
+#> [43] purrr_0.3.4          magrittr_2.0.1       htmltools_0.5.1.1   
+#> [46] ps_1.6.0             ellipsis_0.3.2       usethis_2.0.1       
+#> [49] utf8_1.2.1           stringi_1.6.2        cachem_1.0.5        
+#> [52] crayon_1.4.1
 ```

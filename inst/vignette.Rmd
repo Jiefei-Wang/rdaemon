@@ -42,7 +42,7 @@ The daemon organizes user's code using the task. A task is combination of the R 
 ![](daemon_structure.jpg)
 Note that when multiple tasks are in the same daemon, the daemon will run them sequentially. Therefore, it is recommended to keep each task relatively simple if many tasks exist in the same daemon. Otherwise a long-running task might block the execution of the other tasks.
 
-`rdaemon` supports many daemon structure, below are the common use cases.
+`rdaemon` supports many programming models, below are the common use cases.
 
 ![](framework.jpg)
 
