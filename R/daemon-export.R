@@ -117,6 +117,9 @@ registerDaemon <- function(daemonName = lastRegisteredDaemon(),
     invisible()
 }
 
+#' @param deleteTask logical(1), whether to delete the task set by
+#' the current R session.
+#' 
 #' @details 
 #' `deregisterDaemon`: 
 #' disconnect a daemon and (optionally) remove all tasks in the daemon
@@ -394,7 +397,7 @@ daemonExport <- function(...,
 daemonLogs <- function(daemonName = lastRegisteredDaemon()){
     checkDaemonArgs(daemonName = daemonName)
     logPath <- daemonEval(daemonName = daemonName, 
-                          expr = rdaemon:::serverData$logFile)
+                          expr.char = "rdaemon:::serverData$logFile")
     if(is.null(logPath))
         return(logPath)
     

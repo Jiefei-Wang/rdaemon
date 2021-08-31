@@ -112,11 +112,6 @@ enableLog <- function(logFile, threshold){
     flog.info("Daemon PID: %d", Sys.getpid())
 }
 
-disableLog <- function(){
-    sink(con, append = FALSE)
-    sink(con, append = FALSE, type = "message")
-}
-
 truncateLog <- function(){
     timeout <- isTimeout("truncate", "log", serverData$logTruncationInterval)
     if(!timeout)

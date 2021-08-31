@@ -98,6 +98,9 @@ You can also use `daemonLogs()` to obtain the log.}
 \item{threshold, }{character(1), the verbose level of the daemon log.
 The value must be one of "INFO", "WARN", "ERROR", "DEBUG", or "TRACE".}
 
+\item{deleteTask}{logical(1), whether to delete the task set by
+the current R session.}
+
 \item{expr}{expression(), an R expression that can be run by the daemon.}
 
 \item{taskId}{character(1), the ID of the task. If not specified, the 
