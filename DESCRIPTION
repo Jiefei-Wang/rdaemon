@@ -1,13 +1,18 @@
 Package: rdaemon
 Type: Package
-Title: run an R daemon in the background
-Version: 0.0.99
+Title: run an R daemon process in the background
+Version: 1.0.0
 Date: 2021-08-09
-Author: Your Name
-Maintainer: Your Name <your@email.com>
+Authors@R: 
+    person(given = "Jiefei",
+           family = "Wang",
+           role = c("aut", "cre"),
+           email = "szwjf08@gmail.com")
 Description: 
-    run an independent R daemon in the background. The other R session 
-    can connect with the daemon using the daemon name.
+    Run an independent R daemon process in the background. The process will
+    keep running even after its parent process quits. The other R sessions 
+    can connect with the existing daemon using the daemon name and send 
+    the task via 'daemonSetTask()'.
 License: GPL (>= 2)
 Imports: 
     Rcpp (>= 1.0.6),
