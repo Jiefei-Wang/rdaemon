@@ -1,0 +1,7 @@
+rdaemon:::detachConsole()
+file <- Sys.getenv("testthat_pid_file")
+writeLines(as.character(Sys.getpid()), con = file)
+rscript <- R.home("bin/Rscript")
+childScript <- Sys.getenv("testthat_child_script")
+system2(rscript, shQuote(childScript), stdout = FALSE, wait = FALSE)
+Sys.sleep(30)
