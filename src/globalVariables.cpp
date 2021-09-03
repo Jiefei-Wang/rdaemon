@@ -1,3 +1,4 @@
+#define R_NO_REMAP
 #include <string>
 #include <map>
 #include <Rinternals.h>
@@ -12,14 +13,31 @@
 #include <unistd.h>          /* For close file descriptor */
 #include <errno.h>
 #include <string.h>
+#ifdef __APPLE__
+#define PKG_SPACE "/rd_"
+#else
 #define PKG_SPACE "/rdaemon_"
 #endif
+#endif
+
+
+// [[Rcpp::export]]
+unsigned int getNameMaxLen(){
+    #ifdef __APPLE__
+    return SHM_NAME_MAX - strlen(PKG_SPACE);
+    #endif
+    #ifdef unix
+    return PATH_MAX - strlen(PKG_SPACE);
+    #endif
+    return UINT_MAX;
+}
 
 
 std::string getName(std::string name)
 {
     return PKG_SPACE + name;
 }
+
 
 #ifdef _WIN32
 std::map<std::string, HANDLE> handleMap;
@@ -28,7 +46,7 @@ std::map<std::string, int *> mappedMemoryMap;
 // [[Rcpp::export]]
 bool existsGlobalVariable(SEXP sharedMemoryName)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
 
     HANDLE hMapFile = CreateFileMappingA(
         INVALID_HANDLE_VALUE, // use paging file
@@ -48,7 +66,7 @@ bool createGlobalVariable(SEXP sharedMemoryName, int size)
     int *pBuf;
     std::string name;
 
-    name = getName(CHAR(asChar(sharedMemoryName)));
+    name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) != handleMap.end())
     {
         return true;
@@ -86,7 +104,7 @@ bool createGlobalVariable(SEXP sharedMemoryName, int size)
 // [[Rcpp::export]]
 void setGlobalVariable(SEXP sharedMemoryName, int value)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) == handleMap.end())
     {
         createGlobalVariable(sharedMemoryName, sizeof(int));
@@ -98,7 +116,7 @@ void setGlobalVariable(SEXP sharedMemoryName, int value)
 // [[Rcpp::export]]
 int getGlobalVariable(SEXP sharedMemoryName)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) == handleMap.end())
     {
         if(!existsGlobalVariable(sharedMemoryName))
@@ -112,7 +130,7 @@ int getGlobalVariable(SEXP sharedMemoryName)
 // [[Rcpp::export]]
 void unsetGlobalVariable(SEXP sharedMemoryName)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) != handleMap.end())
     {
         UnmapViewOfFile(mappedMemoryMap.at(name));
@@ -121,9 +139,10 @@ void unsetGlobalVariable(SEXP sharedMemoryName)
 }
 
 #else
+
 bool existsGlobalVariable(SEXP sharedMemoryName)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
 
     bool exist = (fd != -1);
@@ -134,7 +153,7 @@ bool existsGlobalVariable(SEXP sharedMemoryName)
 
 void setGlobalVariable(SEXP sharedMemoryName, int value)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     size_t size = sizeof(int);
     bool exists = existsGlobalVariable(sharedMemoryName);
     int fd = shm_open(name.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
@@ -161,7 +180,7 @@ void setGlobalVariable(SEXP sharedMemoryName, int value)
 
 int getGlobalVariable(SEXP sharedMemoryName)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     size_t size = sizeof(int);
     int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
     if(fd == -1){
@@ -183,7 +202,7 @@ int getGlobalVariable(SEXP sharedMemoryName)
 
 void unsetGlobalVariable(SEXP sharedMemoryName)
 {
-    std::string name = getName(CHAR(asChar(sharedMemoryName)));
+    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     shm_unlink(name.c_str());
 }
 

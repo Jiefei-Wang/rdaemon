@@ -401,8 +401,8 @@ daemonLogs <- function(daemonName = lastRegisteredDaemon()){
     checkDaemonArgs(daemonName = daemonName)
     logPath <- daemonEval(daemonName = daemonName, 
                           expr.char = "rdaemon:::serverData$logFile")
-    if(is.null(logPath))
-        return(logPath)
+    if(is.null(logPath)||!nzchar(logPath))
+        return(character())
     
     stopifnot(file.exists(logPath))
     readLines(logPath)

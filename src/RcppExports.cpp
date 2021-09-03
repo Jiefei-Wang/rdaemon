@@ -25,6 +25,16 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// getNameMaxLen
+unsigned int getNameMaxLen();
+RcppExport SEXP _rdaemon_getNameMaxLen() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(getNameMaxLen());
+    return rcpp_result_gen;
+END_RCPP
+}
 // existsGlobalVariable
 bool existsGlobalVariable(SEXP sharedMemoryName);
 RcppExport SEXP _rdaemon_existsGlobalVariable(SEXP sharedMemoryNameSEXP) {
@@ -83,6 +93,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_rdaemon_send_SIGINT", (DL_FUNC) &_rdaemon_send_SIGINT, 1},
     {"_rdaemon_detachConsole", (DL_FUNC) &_rdaemon_detachConsole, 0},
+    {"_rdaemon_getNameMaxLen", (DL_FUNC) &_rdaemon_getNameMaxLen, 0},
     {"_rdaemon_existsGlobalVariable", (DL_FUNC) &_rdaemon_existsGlobalVariable, 1},
     {"_rdaemon_setGlobalVariable", (DL_FUNC) &_rdaemon_setGlobalVariable, 2},
     {"_rdaemon_getGlobalVariable", (DL_FUNC) &_rdaemon_getGlobalVariable, 1},

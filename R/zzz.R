@@ -6,6 +6,6 @@
 NULL
 
 .onLoad <- function(libname, pkgname){
-    clientData$lastRegisteredDaemon <- paste0("DefaultDaemon_", Sys.getpid())
-    clientData$lastSetTaskId <- paste0("DefaultTask_", Sys.getpid())
+    clientData$lastRegisteredDaemon <- paste0("daemon_", Sys.getpid())
+    clientData$lastSetTaskId <- paste0("task_", Sys.getpid())
 }

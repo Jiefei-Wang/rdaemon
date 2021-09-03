@@ -8,8 +8,8 @@ clientData$daemonConnections <- list()
 clientData$daemonPorts <- list()
 clientData$daemonPids <- list()
 clientData$daemonTasks <- list()
-clientData$lastRegisteredDaemon <- paste0("DefaultDaemon_", Sys.getpid())
-clientData$lastSetTaskId <- paste0("DefaultTask_", Sys.getpid())
+clientData$lastRegisteredDaemon <- paste0("daemon_", Sys.getpid())
+clientData$lastSetTaskId <- paste0("task_", Sys.getpid())
 clientData$waitTimeout <- 2*60
 
 ## accessors
@@ -180,20 +180,33 @@ client.registerDaemon <-
     function(daemonName = lastRegisteredDaemon(),
              logFile = NULL, 
              threshold = c("INFO", "WARN", "ERROR", "DEBUG", "TRACE")){
+        if(nchar(daemonName) > getNameMaxLen()){
+            daemonName <- substr(daemonName, 0, getNameMaxLen())
+            warning("The daemon name exceeds the name length limit ", 
+                    "and will be truncated to '", daemonName, "'")
+        }
+        
         if(!daemonExists(daemonName)){
             rscript <- R.home("bin/Rscript")
             script <- system.file(package="rdaemon", "scripts", "startDaemon.R")
+            if(is.null(logFile))
+                logFile <- tempfile(fileext = ".txt")
+            
             ## TODO: unset the environment after use
             Sys.setenv(rdaemon_daemonName = daemonName)
             Sys.setenv(rdaemon_threshold = threshold)
-            if(!is.null(logFile))
-                Sys.setenv(rdaemon_logFile = logFile)
+            Sys.setenv(rdaemon_logFile = logFile)
             
             system2(rscript, shQuote(script), stdout = FALSE, wait = FALSE)
         }
         Sys.sleep(1)
+        resetTimer("client", "registerDaemon")
         while(!loadDaemon(daemonName)){
-            
+            timeout <- isTimeout("client", "registerDaemon", 60)
+            if(timeout){
+                stop("Fail to start the daemon")
+            }
+            Sys.sleep(0.1)
         }
         .setLastRegisteredDaemon(daemonName)
     }

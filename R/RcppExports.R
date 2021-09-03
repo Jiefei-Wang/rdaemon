@@ -9,6 +9,10 @@ detachConsole <- function() {
     invisible(.Call(`_rdaemon_detachConsole`))
 }
 
+getNameMaxLen <- function() {
+    .Call(`_rdaemon_getNameMaxLen`)
+}
+
 existsGlobalVariable <- function(sharedMemoryName) {
     .Call(`_rdaemon_existsGlobalVariable`, sharedMemoryName)
 }
