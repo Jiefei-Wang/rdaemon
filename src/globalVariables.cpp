@@ -136,14 +136,17 @@ void setGlobalVariable(SEXP sharedMemoryName, int value)
 {
     std::string name = getName(CHAR(asChar(sharedMemoryName)));
     size_t size = sizeof(int);
+    bool exists = existsGlobalVariable(sharedMemoryName);
     int fd = shm_open(name.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
     if(fd == -1){
         Rf_error("Fail to create the shared memory file! Error: %s", strerror(errno));
     }
-    int success = ftruncate(fd, size);
-    if(success == -1){
-        close(fd);
-        Rf_error("Fail to truncate the shared memory file! Error: %s", strerror(errno));
+    if(!exists){
+        int success = ftruncate(fd, size);
+        if(success == -1){
+            close(fd);
+            Rf_error("Fail to truncate the shared memory file! Error: %s", strerror(errno));
+        }
     }
     int *ptr = (int *)mmap(NULL, size,
                                           PROT_READ|PROT_WRITE,
