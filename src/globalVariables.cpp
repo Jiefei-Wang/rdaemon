@@ -24,6 +24,9 @@
 // [[Rcpp::export]]
 unsigned int getNameMaxLen(){
     #ifdef __APPLE__
+    #ifndef SHM_NAME_MAX
+    #define SHM_NAME_MAX 32
+    #endif
     return SHM_NAME_MAX - strlen(PKG_SPACE);
     #endif
     #ifdef unix
