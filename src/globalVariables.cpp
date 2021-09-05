@@ -25,7 +25,7 @@ unsigned int getNameMaxLen(){
     #endif
     #endif
     #ifdef unix
-    return PATH_MAX;
+    return NAME_MAX;
     #endif
     return UINT_MAX;
 }
