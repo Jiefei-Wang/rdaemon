@@ -13,20 +13,20 @@ getNameMaxLen <- function() {
     .Call(`_rdaemon_getNameMaxLen`)
 }
 
-existsGlobalVariable <- function(sharedMemoryName) {
-    .Call(`_rdaemon_existsGlobalVariable`, sharedMemoryName)
+existsGlobalVariable <- function(name) {
+    .Call(`_rdaemon_existsGlobalVariable`, name)
 }
 
-setGlobalVariable <- function(sharedMemoryName, value) {
-    invisible(.Call(`_rdaemon_setGlobalVariable`, sharedMemoryName, value))
+setGlobalVariable <- function(name, value) {
+    invisible(.Call(`_rdaemon_setGlobalVariable`, name, value))
 }
 
-getGlobalVariable <- function(sharedMemoryName) {
-    .Call(`_rdaemon_getGlobalVariable`, sharedMemoryName)
+getGlobalVariable <- function(name) {
+    .Call(`_rdaemon_getGlobalVariable`, name)
 }
 
-unsetGlobalVariable <- function(sharedMemoryName) {
-    invisible(.Call(`_rdaemon_unsetGlobalVariable`, sharedMemoryName))
+unsetGlobalVariable <- function(name) {
+    invisible(.Call(`_rdaemon_unsetGlobalVariable`, name))
 }
 
 isProcessRunning <- function(pid) {

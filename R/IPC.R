@@ -1,22 +1,31 @@
 truncateLongName <- function(name){
-    if(nchar(name) > getNameMaxLen()){
-            name <- substr(name, 0, getNameMaxLen() - 5)
+    maxLen <- getNameMaxLen() - nchar(daemonPortName("")) - 1L
+    if(nchar(name) > maxLen){
+            name <- substr(name, 0, maxLen)
             warning("The daemon name exceeds the name length limit ", 
                     "and will be truncated to '", name, "'")
     }
     name
 }
 
+getSharedMemoryName <- function(name){
+    switch(getOS(),
+           windows = paste0("Local\\rd_",name),
+           osx = paste0("/rd_",name),
+           linux = paste0("/rd_",name)
+           )
+}
+
 daemonPortName <- function(name){
-    paste0(name, "_port")
+    getSharedMemoryName(paste0(name, "_port"))
 }
 
 daemonPidName <- function(name){
-    paste0(name, "_pid")
+    getSharedMemoryName(paste0(name, "_pid"))
 }
 
 daemonConnectionName <- function(name){
-    paste0(name, "_con")
+    getSharedMemoryName(paste0(name, "_con"))
 }
 
 getDaemonPort <- function(name){

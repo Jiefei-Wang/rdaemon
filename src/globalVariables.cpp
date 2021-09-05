@@ -1,11 +1,10 @@
-#define R_NO_REMAP
 #include <string>
 #include <map>
-#include <Rinternals.h>
+#define STRICT_R_HEADERS
+#include "Rcpp.h"
 
 #ifdef _WIN32
 #include <windows.h>
-#define PKG_SPACE "Local\\rdaemon_"
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>        /* For mode constants */
@@ -13,32 +12,22 @@
 #include <unistd.h>          /* For close file descriptor */
 #include <errno.h>
 #include <string.h>
-#ifdef __APPLE__
-#define PKG_SPACE "/rd_"
-#else
-#define PKG_SPACE "/rdaemon_"
-#endif
 #endif
 
 
 // [[Rcpp::export]]
 unsigned int getNameMaxLen(){
     #ifdef __APPLE__
-    #ifndef SHM_NAME_MAX
-    #define SHM_NAME_MAX 32
+    #ifdef SHM_NAME_MAX
+    return SHM_NAME_MAX;
+    #else
+    return 32;
     #endif
-    return SHM_NAME_MAX - strlen(PKG_SPACE);
     #endif
     #ifdef unix
-    return PATH_MAX - strlen(PKG_SPACE);
+    return PATH_MAX;
     #endif
     return UINT_MAX;
-}
-
-
-std::string getName(std::string name)
-{
-    return PKG_SPACE + name;
 }
 
 
@@ -46,11 +35,35 @@ std::string getName(std::string name)
 std::map<std::string, HANDLE> handleMap;
 std::map<std::string, int *> mappedMemoryMap;
 
-// [[Rcpp::export]]
-bool existsGlobalVariable(SEXP sharedMemoryName)
+//From: https://stackoverflow.com/questions/1387064/how-to-get-the-error-message-from-the-error-code-returned-by-getlasterror
+//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+std::string GetLastErrorAsString()
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
+    //Get the error message ID, if any.
+    DWORD errorMessageID = ::GetLastError();
+    if(errorMessageID == 0) {
+        return std::string(); //No error message has been recorded
+    }
+    
+    LPSTR messageBuffer = nullptr;
 
+    //Ask Win32 to give us the string version of that message ID.
+    //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+    
+    //Copy the error message into a std::string.
+    std::string message(messageBuffer, size);
+    
+    //Free the Win32's string's buffer.
+    LocalFree(messageBuffer);
+            
+    return message;
+}
+
+// [[Rcpp::export]]
+bool existsGlobalVariable(std::string name)
+{
     HANDLE hMapFile = CreateFileMappingA(
         INVALID_HANDLE_VALUE, // use paging file
         NULL,                 // default security
@@ -63,16 +76,14 @@ bool existsGlobalVariable(SEXP sharedMemoryName)
     return exist;
 }
 
-bool createGlobalVariable(SEXP sharedMemoryName, int size)
+void createGlobalVariable(std::string  name, int size)
 {
     HANDLE hMapFile;
     int *pBuf;
-    std::string name;
 
-    name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) != handleMap.end())
     {
-        return true;
+        return;
     }
 
     hMapFile = CreateFileMappingA(
@@ -85,7 +96,8 @@ bool createGlobalVariable(SEXP sharedMemoryName, int size)
 
     if (hMapFile == NULL)
     {
-        return false;
+        Rcpp::stop("Fail to create file mapping! Error: %s", GetLastErrorAsString().c_str());
+        return;
     }
     pBuf = (int *)MapViewOfFile(hMapFile,            // handle to map object
                                       FILE_MAP_ALL_ACCESS, // read/write permission
@@ -95,45 +107,41 @@ bool createGlobalVariable(SEXP sharedMemoryName, int size)
 
     if (pBuf == NULL)
     {
-        CloseHandle(hMapFile);
-        return false;
+        Rcpp::stop("Fail to map view of file! Error: %s", GetLastErrorAsString().c_str());
+        return;
     }
 
     handleMap.emplace(name, hMapFile);
     mappedMemoryMap.emplace(name, pBuf);
-    return true;
 }
 
 // [[Rcpp::export]]
-void setGlobalVariable(SEXP sharedMemoryName, int value)
+void setGlobalVariable(std::string  name, int value)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) == handleMap.end())
     {
-        createGlobalVariable(sharedMemoryName, sizeof(int));
+        createGlobalVariable(name, sizeof(int));
     }
     int *ptr = mappedMemoryMap.at(name);
     *ptr = value;
 }
 
 // [[Rcpp::export]]
-int getGlobalVariable(SEXP sharedMemoryName)
+int getGlobalVariable(std::string  name)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) == handleMap.end())
     {
-        if(!existsGlobalVariable(sharedMemoryName))
+        if(!existsGlobalVariable(name))
             return NA_INTEGER;
         else
-            createGlobalVariable(sharedMemoryName, sizeof(int));
+            createGlobalVariable(name, sizeof(int));
     }
     return *mappedMemoryMap.at(name);
 }
 
 // [[Rcpp::export]]
-void unsetGlobalVariable(SEXP sharedMemoryName)
+void unsetGlobalVariable(std::string  name)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     if (handleMap.find(name) != handleMap.end())
     {
         UnmapViewOfFile(mappedMemoryMap.at(name));
@@ -143,9 +151,8 @@ void unsetGlobalVariable(SEXP sharedMemoryName)
 
 #else
 
-bool existsGlobalVariable(SEXP sharedMemoryName)
+bool existsGlobalVariable(std::string  name)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
 
     bool exist = (fd != -1);
@@ -154,20 +161,21 @@ bool existsGlobalVariable(SEXP sharedMemoryName)
     return exist;
 }
 
-void setGlobalVariable(SEXP sharedMemoryName, int value)
+void setGlobalVariable(std::string  name, int value)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     size_t size = sizeof(int);
-    bool exists = existsGlobalVariable(sharedMemoryName);
+    bool exists = existsGlobalVariable(name);
     int fd = shm_open(name.c_str(), O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
     if(fd == -1){
-        Rf_error("Fail to create the shared memory file! Error: %s", strerror(errno));
+        Rcpp::stop("Fail to create the shared memory file! Error: %s", strerror(errno));
+        return;
     }
     if(!exists){
         int success = ftruncate(fd, size);
         if(success == -1){
             close(fd);
-            Rf_error("Fail to truncate the shared memory file! Error: %s", strerror(errno));
+            Rcpp::stop("Fail to truncate the shared memory file! Error: %s", strerror(errno));
+            return;
         }
     }
     int *ptr = (int *)mmap(NULL, size,
@@ -175,15 +183,15 @@ void setGlobalVariable(SEXP sharedMemoryName, int value)
                                           MAP_SHARED, fd, 0);
     close(fd);
     if(ptr == (void*) -1){
-        Rf_error("Fail to perform the memory mapping!! Error: %s", strerror(errno));
+        Rcpp::stop("Fail to perform the memory mapping!! Error: %s", strerror(errno));
+        return;
     }
     *ptr = value;
     munmap(ptr, size);
 }
 
-int getGlobalVariable(SEXP sharedMemoryName)
+int getGlobalVariable(std::string  name)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     size_t size = sizeof(int);
     int fd = shm_open(name.c_str(), O_RDONLY, S_IRUSR|S_IWUSR);
     if(fd == -1){
@@ -203,9 +211,8 @@ int getGlobalVariable(SEXP sharedMemoryName)
     }
 }
 
-void unsetGlobalVariable(SEXP sharedMemoryName)
+void unsetGlobalVariable(std::string  name)
 {
-    std::string name = getName(CHAR(Rf_asChar(sharedMemoryName)));
     shm_unlink(name.c_str());
 }
 

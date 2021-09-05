@@ -36,45 +36,45 @@ BEGIN_RCPP
 END_RCPP
 }
 // existsGlobalVariable
-bool existsGlobalVariable(SEXP sharedMemoryName);
-RcppExport SEXP _rdaemon_existsGlobalVariable(SEXP sharedMemoryNameSEXP) {
+bool existsGlobalVariable(std::string name);
+RcppExport SEXP _rdaemon_existsGlobalVariable(SEXP nameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sharedMemoryName(sharedMemoryNameSEXP);
-    rcpp_result_gen = Rcpp::wrap(existsGlobalVariable(sharedMemoryName));
+    Rcpp::traits::input_parameter< std::string >::type name(nameSEXP);
+    rcpp_result_gen = Rcpp::wrap(existsGlobalVariable(name));
     return rcpp_result_gen;
 END_RCPP
 }
 // setGlobalVariable
-void setGlobalVariable(SEXP sharedMemoryName, int value);
-RcppExport SEXP _rdaemon_setGlobalVariable(SEXP sharedMemoryNameSEXP, SEXP valueSEXP) {
+void setGlobalVariable(std::string name, int value);
+RcppExport SEXP _rdaemon_setGlobalVariable(SEXP nameSEXP, SEXP valueSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sharedMemoryName(sharedMemoryNameSEXP);
+    Rcpp::traits::input_parameter< std::string >::type name(nameSEXP);
     Rcpp::traits::input_parameter< int >::type value(valueSEXP);
-    setGlobalVariable(sharedMemoryName, value);
+    setGlobalVariable(name, value);
     return R_NilValue;
 END_RCPP
 }
 // getGlobalVariable
-int getGlobalVariable(SEXP sharedMemoryName);
-RcppExport SEXP _rdaemon_getGlobalVariable(SEXP sharedMemoryNameSEXP) {
+int getGlobalVariable(std::string name);
+RcppExport SEXP _rdaemon_getGlobalVariable(SEXP nameSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sharedMemoryName(sharedMemoryNameSEXP);
-    rcpp_result_gen = Rcpp::wrap(getGlobalVariable(sharedMemoryName));
+    Rcpp::traits::input_parameter< std::string >::type name(nameSEXP);
+    rcpp_result_gen = Rcpp::wrap(getGlobalVariable(name));
     return rcpp_result_gen;
 END_RCPP
 }
 // unsetGlobalVariable
-void unsetGlobalVariable(SEXP sharedMemoryName);
-RcppExport SEXP _rdaemon_unsetGlobalVariable(SEXP sharedMemoryNameSEXP) {
+void unsetGlobalVariable(std::string name);
+RcppExport SEXP _rdaemon_unsetGlobalVariable(SEXP nameSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type sharedMemoryName(sharedMemoryNameSEXP);
-    unsetGlobalVariable(sharedMemoryName);
+    Rcpp::traits::input_parameter< std::string >::type name(nameSEXP);
+    unsetGlobalVariable(name);
     return R_NilValue;
 END_RCPP
 }
