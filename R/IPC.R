@@ -9,11 +9,11 @@ truncateLongName <- function(name){
 }
 
 getSharedMemoryName <- function(name){
-    switch(getOS(),
-           windows = paste0("Local\\rd_",name),
-           osx = paste0("/rd_",name),
-           linux = paste0("/rd_",name)
-           )
+    if(getOS() == "windows"){
+        paste0("Local\\rd_",name)
+    }else{
+        paste0("/rd_",name)
+    }
 }
 
 daemonPortName <- function(name){
