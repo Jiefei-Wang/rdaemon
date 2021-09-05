@@ -180,12 +180,7 @@ client.registerDaemon <-
     function(daemonName = lastRegisteredDaemon(),
              logFile = NULL, 
              threshold = c("INFO", "WARN", "ERROR", "DEBUG", "TRACE")){
-        if(nchar(daemonName) > getNameMaxLen()){
-            daemonName <- substr(daemonName, 0, getNameMaxLen())
-            warning("The daemon name exceeds the name length limit ", 
-                    "and will be truncated to '", daemonName, "'")
-        }
-        
+        threshold <- match.arg(threshold)
         if(!daemonExists(daemonName)){
             rscript <- R.home("bin/Rscript")
             script <- system.file(package="rdaemon", "scripts", "startDaemon.R")

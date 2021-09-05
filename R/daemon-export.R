@@ -111,8 +111,10 @@ registerDaemon <- function(daemonName = lastRegisteredDaemon(),
                            logFile = NULL,
                            threshold = c("INFO", "WARN", "ERROR", "DEBUG", "TRACE")){
     threshold <- match.arg(threshold)
+    daemonName <- truncateLongName(daemonName)
     checkDaemonArgs(daemonName = daemonName)
     stopifnot(!serverData$isServer)
+    
     client.registerDaemon(
         daemonName = daemonName, 
         logFile = logFile,

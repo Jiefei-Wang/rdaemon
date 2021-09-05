@@ -73,3 +73,11 @@ test_that("daemon kill",{
     expect_false(daemonExists(daemonName = "myTestDaemon"))
 })
 
+
+test_that("long daemon name", {
+    daemonName <- paste0(sample(letters, 1024, replace = TRUE), collapse = "")
+    suppressWarnings(registerDaemon(daemonName = daemonName))
+    expect_true(daemonExists())
+    killDaemon()
+    expect_false(daemonExists())
+})
