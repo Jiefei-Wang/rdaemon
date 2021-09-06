@@ -1,3 +1,8 @@
+[![R build status](https://github.com/Jiefei-Wang/rdaemon/workflows/R-CMD-check/badge.svg)](https://github.com/Jiefei-Wang/rdaemon/actions)
+[![](https://www.r-pkg.org/badges/version/rdaemon?color=orange)](https://cran.r-project.org/package=rdaemon) 
+[![](http://cranlogs.r-pkg.org/badges/grand-total/rdaemon?color=blue)](https://cran.r-project.org/package=rdaemon)
+[![](http://cranlogs.r-pkg.org/badges/last-month/badger?color=green)](https://cran.r-project.org/package=badger)
+
 # Introduction
 R is a single process language that is designed for interactively used by the user. However, there are some special cases where we might need a daemon process running in the background to silently do some works. However, R does not have a direct support for the daemon process, implementing the daemon requires the experience in both R language and shell scripting, which can be difficult for the non-programmer who just has a limited knowledge of R. 
 
@@ -146,37 +151,30 @@ sessionInfo()
 #> Matrix products: default
 #> 
 #> locale:
-#> [1] LC_COLLATE=English_United States.1252 
-#> [2] LC_CTYPE=English_United States.1252   
-#> [3] LC_MONETARY=English_United States.1252
-#> [4] LC_NUMERIC=C                          
+#> [1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252   
+#> [3] LC_MONETARY=English_United States.1252 LC_NUMERIC=C                          
 #> [5] LC_TIME=English_United States.1252    
 #> system code page: 936
 #> 
 #> attached base packages:
-#> [1] stats     graphics  grDevices utils     datasets  methods  
-#> [7] base     
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rdaemon_1.0.0  testthat_3.0.2
+#> [1] badger_0.1.0  rdaemon_1.0.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Rcpp_1.0.6           formatR_1.11         futile.logger_1.4.3 
-#>  [4] pillar_1.6.1         compiler_4.1.0       base64enc_0.1-3     
-#>  [7] futile.options_1.0.1 prettyunits_1.1.1    remotes_2.4.0       
-#> [10] tools_4.1.0          digest_0.6.27        pkgbuild_1.2.0      
-#> [13] pkgload_1.2.1        evaluate_0.14        memoise_2.0.0       
-#> [16] lifecycle_1.0.0      tibble_3.1.2         pkgconfig_2.0.3     
-#> [19] rlang_0.4.11         cli_2.5.0            rstudioapi_0.13     
-#> [22] yaml_2.2.1           xfun_0.23            fastmap_1.1.0       
-#> [25] withr_2.4.2          stringr_1.4.0        roxygen2_7.1.1      
-#> [28] knitr_1.33           xml2_1.3.2           desc_1.3.0          
-#> [31] fs_1.5.0             vctrs_0.3.8          devtools_2.4.1      
-#> [34] rprojroot_2.0.2      glue_1.4.2           R6_2.5.0            
-#> [37] processx_3.5.2       fansi_0.5.0          rmarkdown_2.8       
-#> [40] sessioninfo_1.1.1    lambda.r_1.2.4       callr_3.7.0         
-#> [43] purrr_0.3.4          magrittr_2.0.1       htmltools_0.5.1.1   
-#> [46] ps_1.6.0             ellipsis_0.3.2       usethis_2.0.1       
-#> [49] utf8_1.2.1           stringi_1.6.2        cachem_1.0.5        
-#> [52] crayon_1.4.1
+#>  [1] Rcpp_1.0.6            BiocManager_1.30.15.3 compiler_4.1.0       
+#>  [4] pillar_1.6.1          formatR_1.11          RColorBrewer_1.1-2   
+#>  [7] futile.logger_1.4.3   futile.options_1.0.1  base64enc_0.1-3      
+#> [10] tools_4.1.0           testthat_3.0.2        jsonlite_1.7.2       
+#> [13] evaluate_0.14         lifecycle_1.0.0       tibble_3.1.2         
+#> [16] gtable_0.3.0          pkgconfig_2.0.3       rlang_0.4.11         
+#> [19] rvcheck_0.1.8         xfun_0.23             stringr_1.4.0        
+#> [22] dplyr_1.0.6           knitr_1.33            generics_0.1.0       
+#> [25] vctrs_0.3.8           dlstats_0.1.4         grid_4.1.0           
+#> [28] tidyselect_1.1.1      glue_1.4.2            R6_2.5.0             
+#> [31] fansi_0.5.0           ggplot2_3.3.5         purrr_0.3.4          
+#> [34] lambda.r_1.2.4        magrittr_2.0.1        scales_1.1.1         
+#> [37] ellipsis_0.3.2        colorspace_2.0-2      utf8_1.2.1           
+#> [40] stringi_1.6.2         munsell_0.5.0         crayon_1.4.1
 ```
