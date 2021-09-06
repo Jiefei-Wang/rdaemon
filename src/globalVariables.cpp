@@ -27,7 +27,10 @@ unsigned int getNameMaxLen(){
     #ifdef unix
     return NAME_MAX;
     #endif
-    return UINT_MAX;
+    #ifdef _WIN32
+        return MAX_PATH;
+    #endif
+    return 1024;
 }
 
 
