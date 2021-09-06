@@ -1,11 +1,16 @@
-
-
 readTxt <- function(file){
     readChar(file, file.info(file)$size)
 }
 
 .difftime <- function(t1, t2){
     difftime(t1, t2, units = "secs")
+}
+
+truncateTxt <- function(x, n){
+  for(i in seq_along(x))
+    if(nchar(x[i]) > n)
+      x[i] <- paste0(substring(x[i], 1, n), "...")
+  x
 }
 
 .warning <- function(prefix){
@@ -30,15 +35,30 @@ readTxt <- function(file){
 }
 
 handleExceptions <- function(expr, warningPrefix, errorPrefix){
-    tryCatch(
-        {
-            withCallingHandlers(
-                expr,
-                warning = .warning(warningPrefix)
-            )
-        },
-        error = .error(errorPrefix)
-    )
+  tryCatch(
+    {
+      withCallingHandlers(
+        expr,
+        warning = .warning(warningPrefix),
+        error = function(e) {
+          flog.error(paste0(errorPrefix, ": %s"), conditionMessage(e))
+          
+          stack <- sys.calls()
+          stack <- truncateTxt(sapply(stack, deparse), 50)
+          stack <- stack[!grepl("[t|T]ryCatch", stack)]
+          stack <- stack[!grepl("withCallingHandlers", stack, fixed = TRUE)]
+          stack <- stack[!grepl(".handleSimpleError", stack, fixed = TRUE)]
+          stack <- stack[!grepl("simpleError", stack, fixed = TRUE)]
+          stack <- stack[!grepl("handleExceptions", stack, fixed = TRUE)]
+          flog.error("Calling stack: ")
+          for(i in stack){
+            flog.error(i)
+          }
+        }
+      )
+    },
+    error = function(e) NULL
+  )
 }
 
 isScalerChar <- function(x){

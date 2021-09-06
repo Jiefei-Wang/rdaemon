@@ -89,7 +89,9 @@ daemonCopyTask(
 }
 \arguments{
 \item{daemonName}{character(1), the name of the daemon. If not provided,
-the last registered daemon or the default daemon name will be used.}
+the last registered daemon or the default daemon name will be used. Note
+that there are length limit on the number of characters in the name and the limit
+varys with the OS. For portability, we recommend using a shorter name.}
 
 \item{logFile}{character(1), the path to the log file. If the file
 does not exist, it will be created. Otherwise, the file will be overwritten.
@@ -187,7 +189,8 @@ This function cannot be called in the daemon.
 `daemonExists`: Whether the daemon exists.
 
 `daemonSetTask`: set the task expression that 
-will be evaluated by the daemon.
+will be evaluated by the daemon. Setting a task to `NULL` 
+can remove a task
 
 `daemonSetTaskScript`: set the task expression that will be 
 evaluated by the daemon using a script file. 
