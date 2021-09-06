@@ -1,9 +1,10 @@
-truncateLongName <- function(name){
+truncateLongName <- function(name, warn = TRUE){
     maxLen <- getNameMaxLen() - nchar(daemonPortName(""))
     if(nchar(name) > maxLen){
             name <- substr(name, 0, maxLen)
-            warning("The daemon name exceeds the name length limit ", 
-                    "and will be truncated to '", name, "'")
+            if(warn)
+                warning("The daemon name exceeds the name length limit ", 
+                        "and will be truncated to '", name, "'")
     }
     name
 }

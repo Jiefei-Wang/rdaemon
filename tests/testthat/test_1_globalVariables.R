@@ -22,7 +22,10 @@ test_that("unsetGlobalVariable",{
 )
 
 test_that("setGlobalVariableWithLongName",{
-    name <- paste0(sample(letters, getNameMaxLen(), replace = TRUE), collapse = "")
+    name <- truncateLongName(
+        paste0(sample(letters, getNameMaxLen(), replace = TRUE), collapse = ""),
+        warn = FALSE
+        )
     setGlobalVariable(name, 1)
     expect_true(existsGlobalVariable(name))
     unsetGlobalVariable(name)

@@ -6,6 +6,7 @@ containPattern <- function(pattern, waitTime = 4){
         if(any(result)){
             return(TRUE)
         }
+        Sys.sleep(1)
     }
     FALSE
 }
