@@ -19,13 +19,13 @@
 unsigned int getNameMaxLen(){
     #ifdef __APPLE__
     #ifdef SHM_NAME_MAX
-    return SHM_NAME_MAX;
+    return SHM_NAME_MAX - 1;
     #else
-    return 32;
+    return 32 - 1;
     #endif
     #endif
     #ifdef unix
-    return NAME_MAX;
+    return NAME_MAX - 1;
     #endif
     #ifdef _WIN32
         return MAX_PATH;
