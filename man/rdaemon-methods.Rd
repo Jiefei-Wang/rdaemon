@@ -189,8 +189,8 @@ This function cannot be called in the daemon.
 `daemonExists`: Whether the daemon exists.
 
 `daemonSetTask`: set the task expression that 
-will be evaluated by the daemon. Setting a task to `NULL` 
-can remove a task
+will be evaluated by the daemon. Calling the function without `expr` and
+`expr.char` arguments will remove the task specified by `taskId`.
 
 `daemonSetTaskScript`: set the task expression that will be 
 evaluated by the daemon using a script file. 

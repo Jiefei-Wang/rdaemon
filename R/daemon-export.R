@@ -202,8 +202,8 @@ daemonExists <- function(daemonName = lastRegisteredDaemon()){
 #' 
 #' @details 
 #' `daemonSetTask`: set the task expression that 
-#' will be evaluated by the daemon. Setting a task to `NULL` 
-#' can remove a task
+#' will be evaluated by the daemon. Calling the function without `expr` and
+#' `expr.char` arguments will remove the task specified by `taskId`.
 #' 
 #' @returns 
 #' `daemonSetTask`: logical(1)
@@ -407,7 +407,10 @@ daemonLogs <- function(daemonName = lastRegisteredDaemon()){
                           expr.char = "rdaemon:::serverData$logFile")
     if(is.null(logPath)||!nzchar(logPath))
         return(character())
-    
+    resetTimer("client", "logFile")
+    while(!file.exists(logPath) && !isTimeout("client", "logFile", 5)){
+        Sys.sleep(0.1)
+    }
     stopifnot(file.exists(logPath))
     readLines(logPath)
 }
