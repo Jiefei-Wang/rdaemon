@@ -136,7 +136,6 @@ truncateLog <- function(){
 
 startServerConnection <- function(daemonName){
     ## Check if the daemon already exists
-    
     if(daemonExists(daemonName)){
         if(getDaemonPid(daemonName) != Sys.getpid()){
             flog.error("The daemon '%s' already exists!", daemonName)

@@ -1,4 +1,5 @@
-#include <Rinternals.h>
+#define STRICT_R_HEADERS
+#include "Rcpp.h"
 #include <string>
 
 #ifdef _WIN32
@@ -16,14 +17,13 @@ void detachConsole()
     FreeConsole();
 #else
      if ( getppid() == 1 ) {
-         Rprintf("The current process is the group leader!");
-         return;
+         Rprintf("The current process is the group leader!\n");
          //Rf_error("Cannot detach group leader!");
      }
     int sid = setsid();  
     if (sid < 0)    
     {  
-        Rf_error("Fail to detach! Error: %s", strerror(errno));
+        Rcpp::stop("Fail to detach! Error: %s", strerror(errno));
     }  
 #endif
 }

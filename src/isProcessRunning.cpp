@@ -1,4 +1,5 @@
-#include <Rinternals.h>
+#define STRICT_R_HEADERS
+#include "Rcpp.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -25,7 +26,7 @@ bool isProcessRunning(long long unsigned pid)
         if(errno == ESRCH)
             exist = false;
         else
-            Rf_error("Fail to check the process status! Error: %s", strerror(errno));
+            Rcpp::stop("Fail to check the process status! Error: %s", strerror(errno));
     }else{
         exist = true;
     }
