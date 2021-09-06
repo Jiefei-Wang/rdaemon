@@ -132,7 +132,7 @@ To close the connection to the daemon, simply run
 ```{r}
 deregisterDaemon()
 ```
-By default, this will remove the task `task1` as well. However, you can left the task running while close the connection by passing `deleteTask = TRUE` to `deregisterDaemon()`
+By default, this will remove the task `task1` as well. However, you can keep the task running while close the connection by passing `deleteTask = FALSE` to `deregisterDaemon()`
 
 To kill the daemon, run
 ```{r}
