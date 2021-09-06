@@ -221,7 +221,6 @@ daemonSetTask <- function(expr = NULL,
         stopifnot(all(nzchar(names(exports))))
     }
     
-    stopifnot(xor(missing(expr), missing(expr.char)))
     if(missing(expr.char)){
         expr <- substitute(expr)
     }else{
