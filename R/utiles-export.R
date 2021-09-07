@@ -14,7 +14,7 @@
 #' @examples 
 #' ## interrupt a process by the PID
 #' \dontrun{
-#' interruptProcess(pid = 1234L)
+#' interruptProcess(pids = 1234L)
 #' }
 #' @rdname daemon-utils
 #' @export

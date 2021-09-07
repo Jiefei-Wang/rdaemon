@@ -30,7 +30,7 @@ it is only recommended to run this function in the daemon.
 \examples{
 ## interrupt a process by the PID
 \dontrun{
-interruptProcess(pid = 1234L)
+interruptProcess(pids = 1234L)
 }
 isProcessAlive(1234L)
 
