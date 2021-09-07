@@ -417,6 +417,7 @@ daemonLogs <- function(daemonName = lastRegisteredDaemon(), prettyPrint = TRUE){
     x <- readLines(logPath)
     if(prettyPrint){
        cat(paste0(x,collapse = "\n"))
+       cat("\n")
        invisible(x)
     }else{
         x
