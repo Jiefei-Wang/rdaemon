@@ -14,11 +14,12 @@ serverData$taskIntervals <- list()
 ## timeout: Time to wait before quit if no task is running
 ## isServer: Whether this is a daemon server
 ## taskPid: The pid corresponds to the currently processed task
-serverData$timeout <- 1*60
+serverData$noTaskTimeout <- 2*60
+serverData$logTruncationInterval <- 60
+serverData$ConnectionCleanupInterval <- 10
 serverData$isServer <- FALSE
 serverData$currentTaskId <- NULL
 serverData$logFile <- NULL
-serverData$logTruncationInterval <- 60
 serverData$logMaxLineNum <- 10000
 serverData$mainLoopInterval <- 0.1
 

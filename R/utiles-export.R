@@ -2,7 +2,7 @@
 #' 
 #' Utility functions for the daemon
 #' 
-#' @param pid integer(1), the process ID
+#' @param pids integer(n), the process IDs
 #' 
 #' @details 
 #' `interruptProcess`: send SIGINT signal to the other process. 
@@ -18,7 +18,12 @@
 #' }
 #' @rdname daemon-utils
 #' @export
-interruptProcess <- function(pid){
+interruptProcess <- function(pids){
+    if(length(pids)!=1){
+        lapply(pids, interruptProcess)
+        return(invisible())
+    }
+    pid <- as.integer(pids)
     if(Sys.info()[['sysname']]=="Windows"){
         send_SIGINT(pid)
     }else{
@@ -37,6 +42,6 @@ interruptProcess <- function(pid){
 #' 
 #' @rdname daemon-utils
 #' @export
-isProcessAlive <- function(pid){
-    isProcessRunning(pid)
+isProcessAlive <- function(pids){
+    vapply(as.integer(pids), isProcessRunning, logical(1))
 }

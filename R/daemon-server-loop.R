@@ -69,6 +69,12 @@ daemonLoop <- function(){
     warningPrefix = "Uncached warning in truncateLog",
     errorPrefix = "Uncached error in truncateLog")
     
+    handleExceptions({
+        cleanupInvalidConnection()
+    },
+    warningPrefix = "Uncached warning in cleanupInvalidConnection",
+    errorPrefix = "Uncached error in cleanupInvalidConnection")
+    
     ## Check if the daemon is timeout
     handleExceptions({
         timeout <- isLoopTimeout()
@@ -339,11 +345,27 @@ processIndividualRequest <- function(request, pid = NULL, con = NULL){
 
 
 isLoopTimeout <- function(){
-    timeout <- isTimeout("server", "loop", serverData$timeout)
+    timeout <- isTimeout("server", "loop", serverData$noTaskTimeout)
     if(length(serverData$tasks) == 0){
         timeout
     }else{
         resetTimer("server", "loop")
         FALSE
+    }
+}
+
+
+cleanupInvalidConnection <- function(){
+    timeout <- isTimeout("server", "closeConnection", serverData$ConnectionCleanupInterval)
+    if(!timeout)
+        return()
+    pids <- names(serverData$connections)
+    exists <- isProcessAlive(pids)
+    idx <- which(!exists)
+    for(i in idx){
+        pid <- pids[i]
+        flog.info("The connection from the pid %s is closed", pid)
+        close(serverData$connections[[pid]])
+        serverData$connections[[pid]] <- NULL
     }
 }
