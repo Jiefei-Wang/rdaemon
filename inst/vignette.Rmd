@@ -98,7 +98,7 @@ daemonSetTaskScript(script)
 
 ## Wait and collect the daemon log to see the output
 Sys.sleep(2)
-tail(daemonLogs(), n = 1)
+daemonLogs()
 ```
 `daemonSetTaskScript()` will ultimately use `daemonSetTask()` to set the task expression, so if you use a different task ID in `daemonSetTaskScript()`, it will also affect the default task ID for the subsequent function call.
 
