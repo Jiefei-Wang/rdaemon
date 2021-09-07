@@ -28,13 +28,19 @@ bool isProcessRunning(long long unsigned pid)
     exist = (ret == WAIT_TIMEOUT);
     #else
     int res = kill(pid, 0);
+    if(res == 0){
+        exist = true;
+    }else{
     if(res == -1){
         if(errno == ESRCH)
             exist = false;
+        else if(errno == EPERM)
+            exist = true;
         else
             Rcpp::stop("Fail to check the process status! Error: %s", strerror(errno));
     }else{
-        exist = true;
+        Rcpp::stop("Unknown return value %d in kill().", res);
+    }
     }
     #endif
     return exist;
