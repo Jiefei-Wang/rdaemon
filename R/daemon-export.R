@@ -394,6 +394,8 @@ daemonExport <- function(...,
     invisible()
 }
 
+#' @param prettyPrint logical(1), whether to print out the log in a pretty format
+#' 
 #' @details 
 #' `daemonLogs`: Get the log of the daemon.
 #' 
@@ -401,7 +403,7 @@ daemonExport <- function(...,
 #' `daemonLogs`: character(n)
 #' @rdname rdaemon-methods 
 #' @export
-daemonLogs <- function(daemonName = lastRegisteredDaemon()){
+daemonLogs <- function(daemonName = lastRegisteredDaemon(), prettyPrint = TRUE){
     checkDaemonArgs(daemonName = daemonName)
     logPath <- daemonEval(daemonName = daemonName, 
                           expr.char = "rdaemon:::serverData$logFile")
@@ -412,7 +414,13 @@ daemonLogs <- function(daemonName = lastRegisteredDaemon()){
         Sys.sleep(0.1)
     }
     stopifnot(file.exists(logPath))
-    readLines(logPath)
+    x <- readLines(logPath)
+    if(prettyPrint){
+       cat(paste0(x,collapse = "\n"))
+       invisible(x)
+    }else{
+        x
+    }
 }
 
 #' @param sourceId character(1), the source task ID.

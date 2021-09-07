@@ -5,12 +5,12 @@
 \alias{isProcessAlive}
 \title{Utility functions for the daemon}
 \usage{
-interruptProcess(pid)
+interruptProcess(pids)
 
-isProcessAlive(pid)
+isProcessAlive(pids)
 }
 \arguments{
-\item{pid}{integer(1), the process ID}
+\item{pids}{integer(n), the process IDs}
 }
 \value{
 `interruptProcess`: invisible()

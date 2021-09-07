@@ -79,7 +79,7 @@ daemonExport(
   taskId = lastSetTaskId()
 )
 
-daemonLogs(daemonName = lastRegisteredDaemon())
+daemonLogs(daemonName = lastRegisteredDaemon(), prettyPrint = TRUE)
 
 daemonCopyTask(
   sourceId,
@@ -120,6 +120,8 @@ environment.}
 \item{script}{character(1), the path to the script.}
 
 \item{...}{Named arguments that will be exported.}
+
+\item{prettyPrint}{logical(1), whether to print out the log in a pretty format}
 
 \item{sourceId}{character(1), the source task ID.}
 

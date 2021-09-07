@@ -50,9 +50,13 @@ handleExceptions <- function(expr, warningPrefix, errorPrefix){
           stack <- stack[!grepl(".handleSimpleError", stack, fixed = TRUE)]
           stack <- stack[!grepl("simpleError", stack, fixed = TRUE)]
           stack <- stack[!grepl("handleExceptions", stack, fixed = TRUE)]
+          idx <- which(grepl("runTasks", stack, fixed = TRUE))
+          if(length(idx)){
+            stack <- stack[-seq_len(max(idx))]
+          }
           flog.error("Calling stack: ")
           for(i in stack){
-            flog.error(i)
+            flog.error("  %s", i)
           }
         }
       )

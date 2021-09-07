@@ -201,7 +201,7 @@ acceptConnections <- function(){
             flog.debug("Receive an one-time request from pid %s", pid)
             request <- request$data
             processIndividualRequest(request = request, pid = pid, con = con)
-            if(!isClose(request))
+            if(isOpen(con))
                 close(con)
             next
         }

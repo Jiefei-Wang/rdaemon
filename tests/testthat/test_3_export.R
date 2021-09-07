@@ -1,7 +1,8 @@
 containPattern <- function(pattern, waitTime = 4){
     startTime <- Sys.time()
+    logPath <- daemonEval(expr.char = "rdaemon:::serverData$logFile")
     while(difftime(Sys.time(), startTime, units = "secs")< 4){
-        logs <- daemonLogs()
+        logs <- readLines(logPath)
         result <- grepl(pattern, logs)
         if(any(result)){
             return(TRUE)
@@ -14,7 +15,7 @@ containPattern <- function(pattern, waitTime = 4){
 test_that("Run the daemon in the backgroud",{
     daemonName <- "myTestDaemon"
     registerDaemon(daemonName = daemonName,
-                   threshold = "DEBUG")
+                   threshold = "TRACE")
     expect_true(daemonExists(daemonName = daemonName))
     expect_true(containPattern("Daemon PID"))
     expect_equal(daemonName, lastRegisteredDaemon())
@@ -80,5 +81,6 @@ test_that("long daemon name", {
     suppressWarnings(registerDaemon(daemonName = daemonName))
     expect_true(daemonExists())
     killDaemon()
+    Sys.sleep(1)
     expect_false(daemonExists())
 })
