@@ -65,7 +65,7 @@ For starting a new daemon or connecting with an existing daemon, you can simple 
 ```{r}
 registerDaemon(daemonName = "vignetteDaemon")
 ```
-This will start a daemon named `"vignetteDaemon"` if the daemon does not exist. Note that if you do not provide the daemon name, a default name will be used which is unique for each R process. In other words, unless you explicitly use the same daemon name, the first call of `registerDaemon()` will always start a new daemon for the current R session by default.
+This will start a daemon named `"vignetteDaemon"` if the daemon does not exist. Note that if you do not provide the daemon name, a default name will be used which is unique for each R process. In other words, unless you explicitly use the same daemon name, the first call of `registerDaemon()` will always start a new daemon for the current R session by default. There is a certain limit on the number of characters in the daemon name and it varies greatly depending on the OS. A rule of thumb is to keep your name length less than 20 characters. Please do not use any non-letter character in the name as it might be not portable.
 
 
 ## Set the daemon task
@@ -79,7 +79,7 @@ daemonSetTask(expr = message("The variable a is ", a),
 
 ## Wait and collect the daemon logs to see the output
 Sys.sleep(2)
-tail(daemonLogs(), n = 1)
+daemonLogs()
 ```
 Where `expr` is an R expression that will be set to the task, `exports` is a list of object that will be exported to the task environment and must be named. `taskId` determines the ID of the task which will be affected by this function call.
 

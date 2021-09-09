@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 ^\.github$
 ^src/\.vscode$
+^inst/test$

@@ -9,7 +9,7 @@ clientData$daemonPorts <- list()
 clientData$daemonPids <- list()
 clientData$daemonTasks <- list()
 clientData$lastRegisteredDaemon <- paste0("daemon_", Sys.getpid())
-clientData$lastSetTaskId <- paste0("task_", Sys.getpid())
+clientData$lastRegisteredTaskId <- paste0("task_", Sys.getpid())
 clientData$waitTimeout <- 2*60
 
 ## accessors
@@ -33,8 +33,8 @@ clientData$waitTimeout <- 2*60
     clientData$lastRegisteredDaemon
 }
 
-.lastSetTaskId <- function(){
-    clientData$lastSetTaskId
+.lastRegisteredTaskId <- function(){
+    clientData$lastRegisteredTaskId
 }
 
 .setConnection <- function(daemonName, con){
@@ -67,8 +67,8 @@ clientData$waitTimeout <- 2*60
     clientData$lastRegisteredDaemon <- daemonName
 }
 
-.setLastSetTaskId <- function(taskId){
-    clientData$lastSetTaskId <- taskId
+.setLastRegisteredTaskId <- function(taskId){
+    clientData$lastRegisteredTaskId <- taskId
 }
 
 ## utils
@@ -238,7 +238,7 @@ client.killDaemon <- function(daemonName = lastRegisteredDaemon()){
 
 client.setTask <- 
     function(daemonName = lastRegisteredDaemon(), 
-             taskId = lastSetTaskId(), 
+             taskId = lastRegisteredTaskId(), 
              expr = NULL,
              exports,
              interval){
@@ -252,13 +252,13 @@ client.setTask <-
                      waitResponse = FALSE)
         .addTaskId(daemonName = daemonName,
                    taskId = taskId)
-        .setLastSetTaskId(taskId)
+        .setLastRegisteredTaskId(taskId)
         invisible()
     }
 
 
 client.eval <- function(daemonName = lastRegisteredDaemon(), 
-                        taskId = lastSetTaskId(), 
+                        taskId = lastRegisteredTaskId(), 
                         expr = NULL){
     request <- request.eval(taskId = taskId, expr = expr)
     
@@ -270,7 +270,7 @@ client.eval <- function(daemonName = lastRegisteredDaemon(),
 
 client.getTask <- 
     function(daemonName = lastRegisteredDaemon(), 
-             taskId = lastSetTaskId()){
+             taskId = lastRegisteredTaskId()){
         request <- request.getTask(taskId = taskId)
         .sendRequest(daemonName = daemonName, 
                      request = request,
@@ -280,7 +280,7 @@ client.getTask <-
 
 client.deleteTask <- 
     function(daemonName = lastRegisteredDaemon(), 
-             taskId = lastSetTaskId()){
+             taskId = lastRegisteredTaskId()){
         request <- request.deleteTask(taskId = taskId)
         .sendRequest(daemonName = daemonName, 
                      request = request,
@@ -291,7 +291,7 @@ client.deleteTask <-
 
 client.export <- 
     function(daemonName = lastRegisteredDaemon(), 
-             taskId = lastSetTaskId(),
+             taskId = lastRegisteredTaskId(),
              objects){
         request <- request.export(taskId = taskId, objects = objects)
         .sendRequest(daemonName = daemonName, 
@@ -304,7 +304,7 @@ client.export <-
 client.copyTask <- 
     function(daemonName = lastRegisteredDaemon(), 
              sourceId, 
-             targetId = lastSetTaskId()){
+             targetId = lastRegisteredTaskId()){
         request <- request.copyTask(sourceId, targetId)
         .sendRequest(daemonName = daemonName, 
                      request = request,

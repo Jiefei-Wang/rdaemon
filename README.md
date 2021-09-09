@@ -31,7 +31,7 @@ For starting a new daemon or connecting with an existing daemon, you can simple 
 ```r
 registerDaemon(daemonName = "vignetteDaemon")
 ```
-This will start a daemon named `"vignetteDaemon"` if the daemon does not exist. Note that if you do not provide the daemon name, a default name will be used which is unique for each R process. In other words, unless you explicitly use the same daemon name, the first call of `registerDaemon()` will always start a new daemon for the current R session by default.
+This will start a daemon named `"vignetteDaemon"` if the daemon does not exist. Note that if you do not provide the daemon name, a default name will be used which is unique for each R process. In other words, unless you explicitly use the same daemon name, the first call of `registerDaemon()` will always start a new daemon for the current R session by default. There is a certain limit on the number of characters in the daemon name and it varies greatly depending on the OS. A rule of thumb is to keep your name length less than 20 characters. Please do not use any non-letter character in the name as it might be not portable.
 
 
 ## Set the daemon task
@@ -46,11 +46,10 @@ daemonSetTask(expr = message("The variable a is ", a),
 
 ## Wait and collect the daemon logs to see the output
 Sys.sleep(2)
-tail(daemonLogs(), n = 1)
-#> INFO [2021-09-07 23:12:42] Daemon PID: 7740
-#> INFO [2021-09-07 23:12:43] A connection from the pid 41152 is established
+daemonLogs()
+#> INFO [2021-09-09 20:07:08] Daemon PID: 35740
+#> INFO [2021-09-09 20:07:09] A connection from the pid 31996 is established
 #> The variable a is 1
-#> [1] "The variable a is 1"
 ```
 Where `expr` is an R expression that will be set to the task, `exports` is a list of object that will be exported to the task environment and must be named. `taskId` determines the ID of the task which will be affected by this function call.
 
@@ -71,8 +70,8 @@ daemonSetTaskScript(script)
 ## Wait and collect the daemon log to see the output
 Sys.sleep(2)
 daemonLogs()
-#> INFO [2021-09-07 23:12:42] Daemon PID: 7740
-#> INFO [2021-09-07 23:12:43] A connection from the pid 41152 is established
+#> INFO [2021-09-09 20:07:08] Daemon PID: 35740
+#> INFO [2021-09-09 20:07:09] A connection from the pid 31996 is established
 #> The variable a is 1
 #> Hello from the script
 #> Hello from the script
@@ -167,24 +166,19 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] readr_1.4.0   rdaemon_1.0.2 badger_0.1.0 
+#> [1] readr_1.4.0   badger_0.1.0  rdaemon_1.0.4
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] tidyselect_1.1.1      xfun_0.23             remotes_2.4.0         purrr_0.3.4          
-#>  [5] colorspace_2.0-2      vctrs_0.3.8           generics_0.1.0        testthat_3.0.2       
-#>  [9] usethis_2.0.1         htmltools_0.5.1.1     yaml_2.2.1            base64enc_0.1-3      
-#> [13] utf8_1.2.1            rlang_0.4.11          pkgbuild_1.2.0        pillar_1.6.1         
-#> [17] glue_1.4.2            withr_2.4.2           RColorBrewer_1.1-2    lambda.r_1.2.4       
-#> [21] sessioninfo_1.1.1     rvcheck_0.1.8         lifecycle_1.0.0       stringr_1.4.0        
-#> [25] dlstats_0.1.4         munsell_0.5.0         gtable_0.3.0          futile.logger_1.4.3  
-#> [29] devtools_2.4.1        evaluate_0.14         memoise_2.0.0         knitr_1.33           
-#> [33] callr_3.7.0           fastmap_1.1.0         ps_1.6.0              fansi_0.5.0          
-#> [37] Rcpp_1.0.6            BiocManager_1.30.15.3 scales_1.1.1          formatR_1.11         
-#> [41] cachem_1.0.5          desc_1.3.0            pkgload_1.2.1         jsonlite_1.7.2       
-#> [45] fs_1.5.0              hms_1.1.0             ggplot2_3.3.5         digest_0.6.27        
-#> [49] stringi_1.6.2         processx_3.5.2        dplyr_1.0.6           rprojroot_2.0.2      
-#> [53] grid_4.1.0            cli_2.5.0             tools_4.1.0           magrittr_2.0.1       
-#> [57] tibble_3.1.2          futile.options_1.0.1  crayon_1.4.1          pkgconfig_2.0.3      
-#> [61] ellipsis_0.3.2        prettyunits_1.1.1     rmarkdown_2.8         R6_2.5.0             
-#> [65] compiler_4.1.0
+#>  [1] Rcpp_1.0.6            BiocManager_1.30.15.3 compiler_4.1.0        pillar_1.6.1         
+#>  [5] formatR_1.11          RColorBrewer_1.1-2    futile.logger_1.4.3   futile.options_1.0.1 
+#>  [9] base64enc_0.1-3       tools_4.1.0           digest_0.6.27         testthat_3.0.2       
+#> [13] jsonlite_1.7.2        evaluate_0.14         lifecycle_1.0.0       tibble_3.1.2         
+#> [17] gtable_0.3.0          pkgconfig_2.0.3       rlang_0.4.11          rvcheck_0.1.8        
+#> [21] yaml_2.2.1            xfun_0.23             stringr_1.4.0         dplyr_1.0.6          
+#> [25] knitr_1.33            hms_1.1.0             generics_0.1.0        vctrs_0.3.8          
+#> [29] dlstats_0.1.4         grid_4.1.0            tidyselect_1.1.1      glue_1.4.2           
+#> [33] R6_2.5.0              fansi_0.5.0           rmarkdown_2.8         ggplot2_3.3.5        
+#> [37] purrr_0.3.4           lambda.r_1.2.4        magrittr_2.0.1        htmltools_0.5.1.1    
+#> [41] scales_1.1.1          ellipsis_0.3.2        colorspace_2.0-2      utf8_1.2.1           
+#> [45] stringi_1.6.2         munsell_0.5.0         crayon_1.4.1
 ```

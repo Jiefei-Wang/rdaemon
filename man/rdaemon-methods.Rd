@@ -3,7 +3,7 @@
 \name{rdaemon-methods}
 \alias{rdaemon-methods}
 \alias{lastRegisteredDaemon}
-\alias{lastSetTaskId}
+\alias{lastRegisteredTaskId}
 \alias{registerDaemon}
 \alias{deregisterDaemon}
 \alias{killDaemon}
@@ -21,7 +21,7 @@
 \usage{
 lastRegisteredDaemon()
 
-lastSetTaskId()
+lastRegisteredTaskId()
 
 registerDaemon(
   daemonName = lastRegisteredDaemon(),
@@ -38,7 +38,7 @@ daemonExists(daemonName = lastRegisteredDaemon())
 daemonSetTask(
   expr = NULL,
   daemonName = lastRegisteredDaemon(),
-  taskId = lastSetTaskId(),
+  taskId = lastRegisteredTaskId(),
   expr.char = NULL,
   interval = 1L,
   exports = list()
@@ -47,7 +47,7 @@ daemonSetTask(
 daemonSetTaskScript(
   script,
   daemonName = lastRegisteredDaemon(),
-  taskId = lastSetTaskId(),
+  taskId = lastRegisteredTaskId(),
   interval = 1,
   exports = list()
 )
@@ -55,35 +55,38 @@ daemonSetTaskScript(
 daemonSetTaskInterval(
   interval,
   daemonName = lastRegisteredDaemon(),
-  taskId = lastSetTaskId()
+  taskId = lastRegisteredTaskId()
 )
 
 daemonGetTaskInterval(
   interval,
   daemonName = lastRegisteredDaemon(),
-  taskId = lastSetTaskId()
+  taskId = lastRegisteredTaskId()
 )
 
 daemonEval(
   expr,
   daemonName = lastRegisteredDaemon(),
-  taskId = lastSetTaskId(),
+  taskId = lastRegisteredTaskId(),
   expr.char = NULL
 )
 
-daemonGetTask(daemonName = lastRegisteredDaemon(), taskId = lastSetTaskId())
+daemonGetTask(
+  daemonName = lastRegisteredDaemon(),
+  taskId = lastRegisteredTaskId()
+)
 
 daemonExport(
   ...,
   daemonName = lastRegisteredDaemon(),
-  taskId = lastSetTaskId()
+  taskId = lastRegisteredTaskId()
 )
 
 daemonLogs(daemonName = lastRegisteredDaemon(), prettyPrint = TRUE)
 
 daemonCopyTask(
   sourceId,
-  targetId = lastSetTaskId(),
+  targetId = lastRegisteredTaskId(),
   daemonName = lastRegisteredDaemon()
 )
 }
@@ -130,7 +133,7 @@ environment.}
 \value{
 `lastRegisteredDaemon`: character(1)
 
-`lastSetTaskId`: character(1)
+`lastRegisteredTaskId`: character(1)
 
 `registerDaemon`: invisible()
 
@@ -171,7 +174,7 @@ with the same daemon if they use a common daemon name.
 or a unique daemon name for the current process if no daemon 
 is registered.
 
-`lastSetTaskId`: Get the last task ID set via `daemonSetTask`,
+`lastRegisteredTaskId`: Get the last task ID set via `daemonSetTask`,
 or a unique task ID for the current process if no task 
 is set.
 
@@ -230,7 +233,7 @@ not empty, the existing content will be overwritten.
 ## These will be used in the subsequential calls
 ## in this example
 lastRegisteredDaemon()
-lastSetTaskId()
+lastRegisteredTaskId()
 
 ## Register a daemon using the default daemon name
 myfile <- tempfile()
@@ -242,7 +245,7 @@ readLines(myfile)
 daemonExists()
 
 ## Set a task run by the daemon
-#daemonSetTask(message("Hello from daemon"))
+daemonSetTask(message("Hello from daemon"))
 
 ## See the daemon log for the output
 Sys.sleep(1)

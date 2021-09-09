@@ -34,7 +34,7 @@ test_that("daemon eval",{
 })
 
 test_that("daemon copy",{
-    daemonCopyTask(sourceId = lastSetTaskId(), targetId = "100")
+    daemonCopyTask(sourceId = lastRegisteredTaskId(), targetId = "100")
     daemonEval({i <- 12})
     daemonEval({i <- 13}, taskId = "100")
     expect_true(containPattern("The value of i is 12"))
