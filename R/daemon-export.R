@@ -12,16 +12,14 @@
 #' @seealso \code{\link{isProcessAlive}}, \code{\link{interruptProcess}}
 #' @examples 
 #' ## Check the default daemon name and task ID
-#' ## These will be used in the subsequential calls
+#' ## These will be used in the subsequent calls
 #' ## in this example
 #' lastRegisteredDaemon()
 #' lastRegisteredTaskId()
 #' 
 #' ## Register a daemon using the default daemon name
-#' myfile <- tempfile()
-#' registerDaemon(logFile = myfile, threshold = "TRACE")
-#' Sys.sleep(2)
-#' readLines(myfile)
+#' registerDaemon()
+#' daemonLogs()
 #' 
 #' ## Check if the daemon is running
 #' daemonExists()
