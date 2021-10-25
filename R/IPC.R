@@ -13,16 +13,16 @@ getSharedMemoryName <- function(name){
     if(getOS() == "windows"){
         paste0("Local\\rd_",name)
     }else{
-        paste0("/rd_",name)
+        paste0("/rd",name)
     }
 }
 
 daemonPortName <- function(name){
-    getSharedMemoryName(paste0(name, "_port"))
+    getSharedMemoryName(paste0(name, "t"))
 }
 
 daemonPidName <- function(name){
-    getSharedMemoryName(paste0(name, "_pid"))
+    getSharedMemoryName(paste0(name, "d"))
 }
 
 daemonConnectionName <- function(name){
