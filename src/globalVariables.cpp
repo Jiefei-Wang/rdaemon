@@ -12,7 +12,7 @@
 #include <unistd.h>          /* For close file descriptor */
 #include <errno.h>
 #include <string.h>
-#include <limits.h>          /* for Solaris NAME_MAX*/
+#include <limits.h>          /* for Solaris NAME_MAX */
 #endif
 
 // [[Rcpp::export]]
