@@ -26,7 +26,7 @@ daemonPidName <- function(name){
 }
 
 daemonConnectionName <- function(name){
-    getSharedMemoryName(paste0(name, "_con"))
+    getSharedMemoryName(paste0(name, "c"))
 }
 
 getDaemonPort <- function(name){
