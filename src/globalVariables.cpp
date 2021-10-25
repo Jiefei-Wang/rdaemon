@@ -7,6 +7,7 @@
 #include <windows.h>
 #else
 #include <sys/mman.h>
+#include <limits.h>
 #include <sys/stat.h>        /* For mode constants */
 #include <fcntl.h>           /* For O_* constants */
 #include <unistd.h>          /* For close file descriptor */
@@ -28,7 +29,7 @@ unsigned int getNameMaxLen()
 #ifdef NAME_MAX
     return NAME_MAX - 1;
 #else
-    return 16 - 1;
+    return 14 - 1;
 #endif
 #endif
 #ifdef _WIN32
