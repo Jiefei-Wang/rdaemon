@@ -3,11 +3,13 @@ Type: Package
 Title: Run an R Daemon Process in the Background
 Version: 1.0.8
 Date: 2021-10-25
-Authors@R: 
-    person(given = "Jiefei",
-           family = "Wang",
-           role = c("aut", "cre"),
-           email = "szwjf08@gmail.com")
+Authors@R: c(
+    person(
+        "Jiefei", "Wang",
+        email = "szwjf08@gmail.com",
+        role = c("aut", "cre")
+    ),
+    person("Martin", "Morgan", role = "aut"))
 Description: 
     Run an independent R daemon process in the background. The process will
     keep running even after its terminal quits. The other R sessions 
